@@ -1,0 +1,564 @@
+import os
+import sys
+import Plot_Configs as PC
+import Analyzer_Configs as AC
+from ROOT import *
+
+#####################################################################
+
+def getVariableHistsEventsNumber(Tree,varName,sample,cut):
+
+    #Make a canvas to do the work on
+    canvas = TCanvas(varName,varName,1000,800)
+
+    if sample in ['Electron', 'Muon']:
+        if sample == 'Electron':
+            Tree.Draw("{0}>>tree{0}".format(varName),"{0}>0.&&abs(l1_id)==11".format(varName))
+        else:
+            Tree.Draw("{0}>>tree{0}".format(varName),"{0}>0.&&abs(l1_id)==13".format(varName))
+        Hist = gDirectory.Get("tree{0}".format(varName))
+
+        canvas.Clear()
+    else:
+        #Extract the relevant variable from the trees
+        Tree.Draw("{0}>>tree{0}".format(varName),"{0}".format(cut))
+        Hist = gDirectory.Get("tree{0}".format(varName))
+
+        canvas.Clear()
+
+    return Hist.Integral()
+
+def getVariableHistsEventsNumber_weight(Tree,varName,sample,cut):
+
+    #Make a canvas to do the work on
+    canvas = TCanvas(varName,varName,1000,800)
+
+    #Extract the relevant variable from the trees
+    Tree.Draw("{0}>>tree{0}".format(varName),"factor*pho1SFs*pho2SFs*({0})".format(cut))
+    Hist = gDirectory.Get("tree{0}".format(varName))
+
+    canvas.Clear()
+
+    return Hist.Integral()
+
+def CountCutFlow(ana_cfg, lumi, outPath):
+
+    if ana_cfg.mass == 'M1':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "\\Delta R(\\gamma\\gamma)<0.15", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
+        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho<0.15", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
+    elif ana_cfg.mass == 'M5':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.1\\leqs\\Delta R(\\gamma\\gamma)<0.5", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
+        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>0.1&&dR_pho<0.5", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
+    elif ana_cfg.mass == 'M15':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.2\\leqs\\Delta R(\\gamma\\gamma)<2", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
+        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>0.2&&dR_pho<2.0", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
+    elif ana_cfg.mass == 'M30':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "1.0\\leqs\\Delta R(\\gamma\\gamma)<3.2", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
+        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>1.0&&dR_pho<3.2", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
+    else:
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "conversion veto", "charge Iso", "neutral Iso","HOverE", "\\Delta R(l,\\gamma)>0.4","118\\leqslant m_{H}\\leqslant 130"]
+        varName=["passEleVeto", "passChaHadIso", "passNeuHadIso","passHOverE","passdR_gl","passH_m"]
+
+    outTable = open(outPath + 'cutFlowTable_'+ ana_cfg.mass + '.txt',"w")
+    outTable.write("\\begin{landscape}\n")
+    outTable.write("\\renewcommand{\\arraystretch}{1.5}\n")
+    outTable.write("\\begin{table}[tp]\n")
+    outTable.write("\\centering\n")
+    outTable.write("\\fontsize{6.5}{8}\\selectfont\n")
+
+    Ncolum = "\\begin{tabular}{|c|"
+    name_line = "lumi = " + lumi + " fb^{-1}"
+    value = {}
+    value_weight = {}
+
+    line_weight = "event weight"
+    line_xs = "cross section (pb)"
+    weight = {}
+    for sample in ana_cfg.samp_names:
+
+        files = TFile(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+        filesTree = files.Get("passedEvents")
+
+        ntuples = TChain("passedEvents","chain_" + sample)
+        ntuples.Add(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+
+        Ncolum = Ncolum + "c|"
+        name_line = name_line + "&" + sample
+        #weight_line = weight_line + "&" +
+
+        ntuples.GetEvent(1)
+        line_weight = line_weight + "&" + str(ntuples.event_weight)
+        weight[sample] = ntuples.event_weight
+
+        value[sample] = {}
+        value_weight[sample] = {}
+
+        if sample == 'DYJetsToLL':
+            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1)/(files.Events_weight.GetBinContent(1)/weight[sample]))
+        else:
+            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1))
+
+        value[sample][cutName[0]] = files.nEvents_ntuple.GetEntries()
+        value[sample][cutName[1]] = files.nEvents_trig.GetEntries()
+        value[sample][cutName[2]] = files.Z_e_nocut.GetEntries() + files.Z_mu_nocut.GetEntries()
+        value[sample][cutName[3]] = files.Z_e_lIso.GetEntries() + files.Z_mu_lIso.GetEntries()
+        value[sample][cutName[4]] = files.Z_e_lIso_lTight.GetEntries() + files.Z_mu_lIso_lTight.GetEntries()
+        value[sample][cutName[5]] = files.Z_50.GetEntries()
+
+
+        #varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho<0.15", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
+        cut = ""
+        for i in range(len(varName)):
+            cut = cut + "&" + varName[i]
+            cut = cut.lstrip("&")
+            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, "Z_m", sample, cut)
+            value_weight[sample][cutName[i+6]] = getVariableHistsEventsNumber_weight(filesTree, "Z_m", sample, cut)
+
+
+    value_weight['totalMC'] = {}
+    value['totalMC'] = {}
+    for cut in cutName:
+        value_weight['totalMC'][cut] = 0.
+        value['totalMC'][cut] = 0.
+        for sample in ana_cfg.samp_names:
+            if sample in ana_cfg.sig_names + ['data']: continue
+            value['totalMC'][cut] += value[sample][cut]
+            if cutName.index(cut)<=5:
+                value_weight['totalMC'][cut] += value[sample][cut] * weight[sample]
+            else:
+                value_weight['totalMC'][cut] += value_weight[sample][cut]
+
+
+    Ncolum = Ncolum + "c|" + "}\n"
+    name_line = name_line + "&totalMC" + "\\cr\\hline\n"
+
+    line_xs = line_xs + "&0" + "\\cr\\hline\n"
+    line_weight = line_weight + "&" + "\\cr\\hline\n"
+
+    outTable.write("\\resizebox{\\textwidth}{60mm}{\n")
+    outTable.write("\\setlength{\\tabcolsep}{2mm}{\n")
+    outTable.write(Ncolum)
+    outTable.write("\\hline\n")
+    outTable.write(name_line)
+
+    outTable.write(line_xs)
+    outTable.write(line_weight)
+    outTable.write("\\hline\n")
+
+    for i in range(len(cutName)):
+        line_w = cutName[i]
+        line_bw = "(befor weighted)"
+        for sample in ana_cfg.samp_names + ['totalMC']:
+            if sample != 'data':
+                line_bw = line_bw + "&" + "(" + str(value[sample][cutName[i]]) + ")"
+            else:
+                line_bw = line_bw + "&"
+            if i <= 5:
+                if sample == 'totalMC':
+                    line_w = line_w + "&" + str(value[sample][cutName[i]])
+                else:
+                    line_w = line_w + "&" + str(value[sample][cutName[i]] * weight[sample])
+            else:
+                line_w = line_w + "&" + str(value_weight[sample][cutName[i]])
+        outTable.write(line_w+"\\cr\n")
+        outTable.write(line_bw+"\\cr\\hline\n")
+        if i == 4 or i == 5: outTable.write("\\hline\n")
+
+
+    outTable.write("\\end{tabular}}}\n")
+    outTable.write("\\end{table}\n")
+    outTable.write("\\end{landscape}\n")
+
+
+def CountCutFlow_less(ana_cfg, lumi, outPath):
+
+    cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "\\Delta R(\\gamma\\gamma)<0.15", "sigmaIetaIeta", "HOverE", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
+
+    outTable = open(outPath + 'cutFlowTable_data_less.txt',"w")
+    outTable.write("\\begin{landscape}\n")
+    outTable.write("\\renewcommand{\\arraystretch}{1.5}\n")
+    outTable.write("\\begin{table}[tp]\n")
+    outTable.write("\\centering\n")
+    outTable.write("\\fontsize{6.5}{8}\\selectfont\n")
+
+    Ncolum = "\\begin{tabular}{|c|"
+    name_line = "lumi = " + lumi + " fb^{-1}"
+    value = {}
+
+    line_weight = "event weight"
+    line_xs = "cross section (pb)"
+    weight = {}
+    name = ''
+    for sample in ana_cfg.samp_names:
+        files = TFile(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+        filesTree = files.Get("passedEvents")
+
+        ntuples = TChain("passedEvents","chain_" + sample)
+        ntuples.Add(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+
+
+
+        #weight_line = weight_line + "&" +
+
+        ntuples.GetEvent(1)
+        line_weight = line_weight + "&" + str(ntuples.event_weight)
+        weight[sample] = ntuples.event_weight
+
+        value[sample] = {}
+
+        if sample in ['data', 'QCD']:
+            line_xs = line_xs + "&" + "1.0"
+
+            value[sample][cutName[0]] = 0
+            value[sample][cutName[1]] = 0
+            value[sample][cutName[2]] = 0
+            value[sample][cutName[3]] = 0
+            value[sample][cutName[4]] = 0
+            value[sample][cutName[5]] = 0
+
+        else:
+            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1)/(files.Events_weight.GetBinContent(1)/weight[sample]))
+
+            value[sample][cutName[0]] = files.nEvents_ntuple.GetEntries()
+            value[sample][cutName[1]] = files.nEvents_trig.GetEntries()
+            value[sample][cutName[2]] = files.Z_e_nocut.GetEntries() + files.Z_mu_nocut.GetEntries()
+            value[sample][cutName[3]] = files.Z_e_lIso.GetEntries() + files.Z_mu_lIso.GetEntries()
+            value[sample][cutName[4]] = files.Z_e_lIso_lTight.GetEntries() + files.Z_mu_lIso_lTight.GetEntries()
+            value[sample][cutName[5]] = files.Z_50.GetEntries()
+
+        varName=["H_twopho","Z_Ceta","Z_pho_veto", "Z_CIso", "Z_NIso","Z_dR","Z_dR_pho", "Z_IeIe", "Z_HOE", "Z_PIso","Z_dR_pho_Cmh"]
+        for i in range(len(varName)):
+            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, varName[i], sample)
+
+        if sample in ['WGGJets','WWToLNuQQ','WWW','WWZ','WZZ']:
+            name = name + '/' + sample
+            if sample !='WZZ': continue
+        else:
+            name = sample
+        Ncolum = Ncolum + "c|"
+        if sample =='WZZ':
+            name_line = name_line + "&" + name.lstrip('TTTo2L2Nu/')
+        else:
+            name_line = name_line + "&" + name
+
+    Ncolum = Ncolum + "}\n"
+    name_line = name_line + "\\cr\\hline\n"
+
+    outTable.write("\\resizebox{\\textwidth}{35mm}{\n")
+    outTable.write("\\setlength{\\tabcolsep}{2mm}{\n")
+    outTable.write(Ncolum)
+    outTable.write("\\hline\n")
+    outTable.write(name_line)
+
+    outTable.write("\\hline\n")
+
+    for i in range(len(cutName)):
+        line_w = cutName[i]
+        N = 0.0
+        for sample in ana_cfg.samp_names:
+
+            if sample in ['WGGJets','WWToLNuQQ','WWW','WWZ','WZZ']:
+                N = N + value[sample][cutName[i]] * weight[sample]
+                if sample !='WZZ': continue
+                line_w = line_w + "&" + str(N)
+            else:
+                line_w = line_w + "&" + str(value[sample][cutName[i]] * weight[sample])
+        outTable.write(line_w+"\\cr\\hline\n")
+        if i == 4 or i == 5: outTable.write("\\hline\n")
+
+
+    outTable.write("\\end{tabular}}}\n")
+    outTable.write("\\end{table}\n")
+    outTable.write("\\end{landscape}\n")
+
+
+def CountCutFlow_mva(ana_cfg, lumi, outPath):
+
+    if ana_cfg.mass == 'M1':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "\\Delta R(\\gamma\\gamma)<0.15", "HOverE", "mva"]
+    elif ana_cfg.mass == 'M5':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.1<\\Delta R(\\gamma\\gamma)<0.5", "HOverE", "mva"]
+    elif ana_cfg.mass == 'M15':
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.2<\\Delta R(\\gamma\\gamma)<2", "HOverE", "mva"]
+    else:
+        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.6<\\Delta R(\\gamma\\gamma)<6", "HOverE", "mva"]
+    outTable = open(outPath + 'cutFlowTable_mva_'+ana_cfg.mass+'.txt',"w")
+    outTable.write("\\begin{landscape}\n")
+    outTable.write("\\renewcommand{\\arraystretch}{1.5}\n")
+    outTable.write("\\begin{table}[tp]\n")
+    outTable.write("\\centering\n")
+    outTable.write("\\fontsize{6.5}{8}\\selectfont\n")
+
+    Ncolum = "\\begin{tabular}{|c|"
+    name_line = "lumi = " + lumi + " fb^{-1}"
+    value = {}
+    value_weight = {}
+
+    line_weight = "event weight"
+    line_xs = "cross section (pb)"
+    weight = {}
+    for sample in ana_cfg.samp_names:
+        files = TFile(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+        filesTree = files.Get("passedEvents")
+
+        ntuples = TChain("passedEvents","chain_" + sample)
+        ntuples.Add(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+
+        Ncolum = Ncolum + "c|"
+        name_line = name_line + "&" + sample
+        #weight_line = weight_line + "&" +
+
+        ntuples.GetEvent(1)
+        line_weight = line_weight + "&" + str(ntuples.event_weight)
+        weight[sample] = ntuples.event_weight
+
+        value[sample] = {}
+        value_weight[sample] = {}
+
+        line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1)/(files.Events_weight.GetBinContent(1)/weight[sample]))
+
+        value[sample][cutName[0]] = files.nEvents_ntuple.GetEntries()
+        value[sample][cutName[1]] = files.nEvents_trig.GetEntries()
+        value[sample][cutName[2]] = files.Z_e_nocut.GetEntries() + files.Z_mu_nocut.GetEntries()
+        value[sample][cutName[3]] = files.Z_e_lIso.GetEntries() + files.Z_mu_lIso.GetEntries()
+        value[sample][cutName[4]] = files.Z_e_lIso_lTight.GetEntries() + files.Z_mu_lIso_lTight.GetEntries()
+        value[sample][cutName[5]] = files.Z_50.GetEntries()
+
+
+        varName=["H_twopho","Z_Ceta","Z_pho_veto", "Z_CIso", "Z_NIso","Z_dR","Z_dR_pho", "Z_HOE", "Z_m"]
+        for i in range(len(varName)):
+
+            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, "H_twopho", sample, cut)
+            value_weight[sample][cutName[i+6]] = getVariableHistsEventsNumber_weight(filesTree, "H_twopho", sample, cut)
+
+
+
+    Ncolum = Ncolum + "}\n"
+    name_line = name_line + "\\cr\\hline\n"
+
+    line_xs = line_xs + "\\cr\\hline\n"
+    line_weight = line_weight + "\\cr\\hline\n"
+
+    outTable.write("\\resizebox{\\textwidth}{55mm}{\n")
+    outTable.write("\\setlength{\\tabcolsep}{2mm}{\n")
+    outTable.write(Ncolum)
+    outTable.write("\\hline\n")
+    outTable.write(name_line)
+
+    outTable.write(line_xs)
+    outTable.write(line_weight)
+    outTable.write("\\hline\n")
+
+    for i in range(len(cutName)):
+        line_w = cutName[i]
+        line_bw = "(befor weighted)"
+        for sample in ana_cfg.samp_names:
+            if sample != 'data':
+                line_bw = line_bw + "&" + "(" + str(value[sample][cutName[i]]) + ")"
+            else:
+                line_bw = line_bw + "&"
+            if i <= 5:
+                line_w = line_w + "&" + str(value[sample][cutName[i]] * weight[sample])
+            else:
+                line_w = line_w + "&" + str(value_weight[sample][cutName[i]])
+        outTable.write(line_w+"\\cr\n")
+        outTable.write(line_bw+"\\cr\\hline\n")
+        if i == 4 or i == 5: outTable.write("\\hline\n")
+
+
+    outTable.write("\\end{tabular}}}\n")
+    outTable.write("\\end{table}\n")
+    outTable.write("\\end{landscape}\n")
+
+def CountCutFlow_mva_less(ana_cfg, lumi, outPath):
+
+    cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "mva", "\\Delta R(l,\\gamma)>0.4", "\\Delta R(\\gamma\\gamma)<1.0", "100\\leqslant m_{H}\\leqslant 180"]
+
+    outTable = open(outPath + 'cutFlowTable_mva_less.txt',"w")
+    outTable.write("\\begin{landscape}\n")
+    outTable.write("\\renewcommand{\\arraystretch}{1.5}\n")
+    outTable.write("\\begin{table}[tp]\n")
+    outTable.write("\\centering\n")
+    outTable.write("\\fontsize{6.5}{8}\\selectfont\n")
+
+    Ncolum = "\\begin{tabular}{|c|"
+    name_line = "lumi = " + lumi + " fb^{-1}"
+    value = {}
+
+    line_weight = "event weight"
+    line_xs = "cross section (pb)"
+    weight = {}
+    name = ''
+    for sample in ana_cfg.samp_names:
+        files = TFile(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+        filesTree = files.Get("passedEvents")
+
+        ntuples = TChain("passedEvents","chain_" + sample)
+        ntuples.Add(ana_cfg.sample_loc + '/ALP_%s.root' %sample)
+
+
+
+        #weight_line = weight_line + "&" +
+
+        ntuples.GetEvent(1)
+        line_weight = line_weight + "&" + str(ntuples.event_weight)
+        weight[sample] = ntuples.event_weight
+
+        value[sample] = {}
+
+        if sample in ['data', 'QCD']:
+            line_xs = line_xs + "&" + "1.0"
+
+            value[sample][cutName[0]] = 0
+            value[sample][cutName[1]] = 0
+            value[sample][cutName[2]] = 0
+            value[sample][cutName[3]] = 0
+            value[sample][cutName[4]] = 0
+            value[sample][cutName[5]] = 0
+
+        else:
+            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1))
+
+            value[sample][cutName[0]] = files.nEvents_total.GetBinContent(1)
+            value[sample][cutName[1]] = files.nEvents_trig.GetEntries()
+            value[sample][cutName[2]] = files.Z_e_nocut.GetEntries() + files.Z_mu_nocut.GetEntries()
+            value[sample][cutName[3]] = files.Z_e_lIso.GetEntries() + files.Z_mu_lIso.GetEntries()
+            value[sample][cutName[4]] = files.Z_e_lIso_lTight.GetEntries() + files.Z_mu_lIso_lTight.GetEntries()
+            value[sample][cutName[5]] = files.Z_50.GetEntries()
+
+        varName=["H_twopho","Z_Ceta","Z_pho_veto","Z_pho_veto_mva","Z_dR","Z_dR_pho","Z_dR_pho_Cmh"]
+        for i in range(7):
+            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, varName[i], sample)
+
+        if sample in ['WGGJets','WWToLNuQQ','WWW','WWZ','WZZ']:
+            name = name + '/' + sample
+            if sample !='WZZ': continue
+        else:
+            name = sample
+        Ncolum = Ncolum + "c|"
+        if sample =='WZZ':
+            name_line = name_line + "&" + name.lstrip('TTTo2L2Nu/')
+        else:
+            name_line = name_line + "&" + name
+
+    Ncolum = Ncolum + "}\n"
+    name_line = name_line + "\\cr\\hline\n"
+
+    outTable.write("\\resizebox{\\textwidth}{25mm}{\n")
+    outTable.write("\\setlength{\\tabcolsep}{2mm}{\n")
+    outTable.write(Ncolum)
+    outTable.write("\\hline\n")
+    outTable.write(name_line)
+
+    outTable.write("\\hline\n")
+
+    for i in range(len(cutName)):
+        line_w = cutName[i]
+        N = 0.0
+        for sample in ana_cfg.samp_names:
+
+            if sample in ['WGGJets','WWToLNuQQ','WWW','WWZ','WZZ']:
+                N = N + value[sample][cutName[i]] * weight[sample]
+                if sample !='WZZ': continue
+                line_w = line_w + "&" + str(N)
+            else:
+                line_w = line_w + "&" + str(value[sample][cutName[i]] * weight[sample])
+        outTable.write(line_w+"\\cr\\hline\n")
+        if i == 4 or i == 5: outTable.write("\\hline\n")
+
+
+    outTable.write("\\end{tabular}}}\n")
+    outTable.write("\\end{table}\n")
+    outTable.write("\\end{landscape}\n")
+
+
+def PIso2D(canv, hitos2D_sig, hitos2D_bkg, isEB):
+
+    canv.SetBottomMargin(0.1)
+    canv.cd()
+
+    upper_pad = TPad("upperpad", "upperpad", 0,0.505, 1,1)
+    upper_pad.Draw()
+    upper_pad.cd()
+    hitos2D_sig.GetXaxis().SetTitle("Pflow photon isolation")
+    hitos2D_sig.GetYaxis().SetTitle("photon Pt")
+    hitos2D_sig.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_sig.Draw("COLZ")
+
+    global l1
+    if isEB:
+        l1 = TLine(2.044,0,2.16451,30)
+    else:
+        l1 = TLine(3.032,0,3.143,30)
+    l1.SetLineWidth(3)
+    l1.Draw()
+
+    canv.cd()
+    lower_pad = TPad("lowerpad", "lowerpad_", 0, 0.025, 1,0.495)
+    lower_pad.Draw()
+    lower_pad.cd()
+    hitos2D_bkg.GetXaxis().SetTitle("Pflow photon isolation")
+    hitos2D_bkg.GetYaxis().SetTitle("photon Pt")
+    hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_bkg.Draw("COLZ")
+
+    global l2
+    if isEB:
+        l2 = TLine(2.044,0,2.16451,30)
+    else:
+        l2 = TLine(3.032,0,3.143,30)
+    l2.SetLineWidth(3)
+    l2.Draw("SAME")
+
+
+def plot2D(canv, hitos2D_sig, hitos2D_bkg):
+
+    canv.SetBottomMargin(0.1)
+    canv.cd()
+
+    upper_pad = TPad("upperpad", "upperpad", 0,0.505, 1,1)
+    upper_pad.Draw()
+    upper_pad.cd()
+    hitos2D_sig.GetXaxis().SetTitle("Mh+MZ")
+    #hitos2D_sig.GetXaxis().SetTitleSize(0.15)
+    hitos2D_sig.GetYaxis().SetTitle("Mh")
+    #hitos2D_sig.GetYaxis().SetTitleSize(0.15)
+    hitos2D_sig.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_sig.Draw("COLZ")
+
+    canv.cd()
+    lower_pad = TPad("lowerpad", "lowerpad_", 0, 0.025, 1,0.495)
+    lower_pad.Draw()
+    lower_pad.cd()
+    hitos2D_bkg.GetXaxis().SetTitle("Mh+MZ")
+    #hitos2D_bkg.GetXaxis().SetTitleSize(0.15)
+    hitos2D_bkg.GetYaxis().SetTitle("Mh")
+    #hitos2D_bkg.GetYaxis().SetTitleSize(0.15)
+    hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_bkg.Draw("COLZ")
+
+def plot2D_CONT(canv, hitos2D_sig, hitos2D_bkg):
+
+    canv.SetBottomMargin(0.1)
+    canv.cd()
+
+    upper_pad = TPad("upperpad", "upperpad", 0,0.505, 1,1)
+    upper_pad.Draw()
+    upper_pad.cd()
+    hitos2D_sig.GetXaxis().SetTitle("Mh+MZ")
+    #hitos2D_sig.GetXaxis().SetTitleSize(0.15)
+    hitos2D_sig.GetYaxis().SetTitle("Mh")
+    #hitos2D_sig.GetYaxis().SetTitleSize(0.15)
+    hitos2D_sig.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_sig.Draw("CONT1")
+
+    canv.cd()
+    lower_pad = TPad("lowerpad", "lowerpad_", 0, 0.025, 1,0.495)
+    lower_pad.Draw()
+    lower_pad.cd()
+    hitos2D_bkg.GetXaxis().SetTitle("Mh+MZ")
+    #hitos2D_bkg.GetXaxis().SetTitleSize(0.15)
+    hitos2D_bkg.GetYaxis().SetTitle("Mh")
+    #hitos2D_bkg.GetYaxis().SetTitleSize(0.15)
+    hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
+    hitos2D_bkg.Draw("CONT1")
