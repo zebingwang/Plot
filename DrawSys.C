@@ -461,27 +461,30 @@ string Preselections25= PrePreselections25 + MorePreselections;
   DrawMyPlots("pho_sigEOverEReg",FinalEESelections25, "Photon #sigma_{E}/E", "", "pho_sigEOverEReg_PreEE_PT25", 40, 0., 0.08, 0.05, 1, 0, 0);
   */
 
-  string selection = "factor*(passChaHadIso && passNeuHadIso && passHOverE && passdR_gl && (!passH_m) && passBDT)";
+  //string selection = "factor*(passChaHadIso && passNeuHadIso && passHOverE && passdR_gl && (!passH_m) && passBDT)";
   //DrawMyPlots("Z_m",selection, "Z_m", "", "Z_m", 100, 50., 130., 0.05, 1, 0, 0);
   //DrawMyPlots("ALP_m",selection, "ALP_m", "", "ALP_m_2017", 50, 0., 45., 0.1, 1, 0, 0);
 
-  DrawMyPlots("pho1Pt",selection, "pho1Pt", "", "pho1Pt_2017", 50, 5., 50., 0.1, 0, 0, 0);
-  DrawMyPlots("pho1eta",selection, "pho1eta", "", "pho1eta_2017", 50, -3., 3., 0.1, 1, 0, 0);
-  DrawMyPlots("pho1phi",selection, "pho1phi", "", "pho1phi_2017", 50, -4., 4., 0.1, 1, 0, 0);
-  DrawMyPlots("pho1R9",selection, "pho1R9", "", "pho1R9_2017", 50, 0., 1., 0.1, 1, 0, 0);
-  DrawMyPlots("pho1IetaIeta55",selection, "pho1IetaIeta55", "", "pho1IetaIeta55_2017", 50, 0., 0.07, 0.1, 0, 0, 0);
+  //DrawMyPlots("pho1Pt",selection, "pho1Pt", "", "pho1Pt_2017", 50, 5., 50., 0.1, 0, 0, 0);
+  //DrawMyPlots("pho1eta",selection, "pho1eta", "", "pho1eta_2017", 50, -3., 3., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho1phi",selection, "pho1phi", "", "pho1phi_2017", 50, -4., 4., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho1R9",selection, "pho1R9", "", "pho1R9_2017", 50, 0., 1., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho1IetaIeta55",selection, "pho1IetaIeta55", "", "pho1IetaIeta55_2017", 50, 0., 0.07, 0.1, 0, 0, 0);
 
-  DrawMyPlots("pho2Pt",selection, "pho2Pt", "", "pho2Pt_2017", 50, 5., 50., 0.1, 0, 0, 0);
-  DrawMyPlots("pho2eta",selection, "pho2eta", "", "pho2eta_2017", 50, -3., 3., 0.1, 1, 0, 0);
-  DrawMyPlots("pho2phi",selection, "pho2phi", "", "pho2phi_2017", 50, -4., 4., 0.1, 1, 0, 0);
-  DrawMyPlots("pho2R9",selection, "pho2R9", "", "pho2R9_2017", 50, 0., 1., 0.1, 1, 0, 0);
-  DrawMyPlots("pho2IetaIeta55",selection, "pho2IetaIeta55", "", "pho2IetaIeta55_2017", 50, 0., 0.07, 0.1, 0, 0, 0);
+  //DrawMyPlots("pho2Pt",selection, "pho2Pt", "", "pho2Pt_2017", 50, 5., 50., 0.1, 0, 0, 0);
+  //DrawMyPlots("pho2eta",selection, "pho2eta", "", "pho2eta_2017", 50, -3., 3., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho2phi",selection, "pho2phi", "", "pho2phi_2017", 50, -4., 4., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho2R9",selection, "pho2R9", "", "pho2R9_2017", 50, 0., 1., 0.1, 1, 0, 0);
+  //DrawMyPlots("pho2IetaIeta55",selection, "pho2IetaIeta55", "", "pho2IetaIeta55_2017", 50, 0., 0.07, 0.1, 0, 0, 0);
 
-  DrawMyPlots("ALP_calculatedPhotonIso",selection, "ALP_calculatedPhotonIso", "", "ALP_calculatedPhotonIso_2017", 50, 0., 5., 0.1, 0, 1, 0);
-  DrawMyPlots("var_dR_g1Z",selection, "var_dR_g1Z", "", "var_dR_g1Z_2017", 50, 0., 8., 0.1, 0, 0, 0);
-  DrawMyPlots("var_Pta",selection, "var_Pta", "", "var_Pta_2017", 50, 0., 60., 0.1, 1, 0, 0);
-  DrawMyPlots("var_MhMZ",selection, "var_MhMZ", "", "var_MhMZ_2017", 50, 120., 600., 0.1, 0, 0, 0);
-  DrawMyPlots("H_pt",selection, "H_pt", "", "H_pt_2017", 50, 0., 200., 0.1, 0, 0, 0);
+  //DrawMyPlots("ALP_calculatedPhotonIso",selection, "ALP_calculatedPhotonIso", "", "ALP_calculatedPhotonIso_2017", 50, 0., 5., 0.1, 0, 1, 0);
+  //DrawMyPlots("var_dR_g1Z",selection, "var_dR_g1Z", "", "var_dR_g1Z_2017", 50, 0., 8., 0.1, 0, 0, 0);
+  //DrawMyPlots("var_Pta",selection, "var_Pta", "", "var_Pta_2017", 50, 0., 60., 0.1, 1, 0, 0);
+  //DrawMyPlots("var_MhMZ",selection, "var_MhMZ", "", "var_MhMZ_2017", 50, 120., 600., 0.1, 0, 0, 0);
+  //DrawMyPlots("H_pt",selection, "H_pt", "", "H_pt_2017", 50, 0., 200., 0.1, 0, 0, 0);
+
+  string selection = "factor*pho1SFs*pho2SFs*(passChaHadIso && passNeuHadIso && passHOverE && passdR_gl && (!passH_m))";
+  DrawMyPlots("Val_BDT",selection, "Val_BDT", "", "Val_BDT_2017", 50, 0., 1.0, 0.05, 0, 0, 0);
 
   // #############2018
   //DrawMyPlots("pho1Pt",selection, "pho1Pt", "", "pho1Pt_2018", 50, 5., 50., 0.1, 0, 0, 0);

@@ -30,12 +30,21 @@ lumi_14TeV = "3000 fb^{-1}"
 lumi_13TeV = "35.9 fb^{-1}"
 lumi_8TeV  = "19.7 fb^{-1}"
 lumi_7TeV  = "5.1 fb^{-1}"
-lumi_sqrtS = "35.9 fb^{-1}"
+#lumi_sqrtS = "35.9 fb^{-1}"
 
 drawLogo      = False
 outOfFrame    = False
 
-def CMS_lumi(pad,  iPeriod,  iPosX ):
+def CMS_lumi(pad,  iPeriod,  iPosX, year ):
+    if year == '2016':
+        lumi_sqrtS = "35.9 fb^{-1}"
+    elif year == '2017':
+        lumi_sqrtS = "41.5 fb^{-1}"
+    elif year == '2018':
+        lumi_sqrtS = "56.9 fb^{-1}"
+    else:
+        print "do not include at 2016/2017/2018"
+        exit(0)
     global outOfFrame, relPosX
     if(iPosX/10==0 ): outOfFrame = True
 

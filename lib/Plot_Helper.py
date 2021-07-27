@@ -157,7 +157,7 @@ def DrawOnCanv(canv, var_name, plt_cfg, stacks, histos, scaled_sig, ratio_plot, 
     CMS_lumi.extraText = "Private"
     CMS_lumi.cmsTextSize = 0.95
     CMS_lumi.outOfFrame = True
-    CMS_lumi.CMS_lumi(canv,4,11)
+    CMS_lumi.CMS_lumi(canv,4,11,plt_cfg.year)
 
     canv.cd()
     lower_pad = TPad("lowerpad_"+var_name, "lowerpad_"+var_name, 0, 0.01, 1,0.22)

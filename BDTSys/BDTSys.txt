@@ -1,0 +1,32 @@
+sample 		     normal        ShowerShape_up 		ShowerShape_dn    pho_scale_up 		    pho_scale_dn      pho_smear_up 		   pho_smear_dn     lep_scale_up 		   lep_scale_dn     lep_smear_up 		 lep_smear_dn
+DYJetsToLL 		 898.640197    899.012888908 		  898.640265465     899.930563927 		  897.103625298     898.640265465 		 898.640257835    894.501872063 		 893.486041069    895.96851635 		 894.766444206
+
+
+sample 		 ShowerShape_up 		 ShowerShape_dn
+DYJetsToLL 		 899.012888908 		 898.640265465
+sample 		 pho_scale_up 		 pho_scale_dn
+DYJetsToLL 		 899.930563927 		 897.103625298
+sample 		 pho_smear_up 		 pho_smear_dn
+DYJetsToLL 		 898.640265465 		 898.640257835
+sample 		 lep_scale_up 		 lep_scale_dn
+DYJetsToLL 		 894.501872063 		 893.486041069
+sample 		 lep_smear_up 		 lep_smear_dn
+DYJetsToLL 		 895.96851635 		 894.766444206
+
+######################
+sample 		 normal
+DYJetsToLL 		 208.777431
+sample 		 normal
+DYJetsToLL 		 208.777431
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn
+DYJetsToLL	     208.777431 (unc:208.777431)		     208.777427 (unc:-0.000000)		     210.059450 (unc:0.006141)		     208.777434 (unc:0.000000)		     208.830249 (unc:0.000253)		     208.777432 (unc:0.000000)		     208.777426 (unc:-0.000000)		     210.245767 (unc:0.007033)		     208.830247 (unc:0.000253)		     208.777435 (unc:0.000000)		     208.830247 (unc:0.000253)
+
+##############
+sample         		norm                     					ShowerShape_up           					ShowerShape_dn           					pho_scale_up             					pho_scale_dn             					pho_smear_up             					pho_smear_dn             					lep_scale_up             					lep_scale_dn             					lep_smear_up             					lep_smear_dn             					
+DYJetsToLL	     208.777431 		     208.777427 (unc:-0.000000)		     210.059450 (unc:0.006141)		     208.777434 (unc:0.000000)		     208.830249 (unc:0.000253)		     208.777432 (unc:0.000000)		     208.777426 (unc:-0.000000)		     210.245767 (unc:0.007033)		     208.830247 (unc:0.000253)		     208.777435 (unc:0.000000)		     208.830247 (unc:0.000253)		

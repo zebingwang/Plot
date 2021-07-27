@@ -40,7 +40,7 @@ class Analyzer_Config:
 		else:
 			print 'do not included at 2016/2017/2018!'
 			exit(0)
-                self.sig_names  = ['M1', 'M5', 'M15', 'M30']
+                self.sig_names  = [ 'M5', 'M15', 'M30']
 
 	    self.bkg_names  = [ 'DYJetsToLL']# 'DY4JetsToLL', 'DY3JetsToLL', 'DY2JetsToLL', 'DY1JetsToLL']
     	    #self.bkg_names  = ['ZGToLLG','TTTo2L2Nu', 'DY4JetsToLL', 'DY3JetsToLL', 'DY2JetsToLL', 'DY1JetsToLL']

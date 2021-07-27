@@ -562,3 +562,101 @@ def plot2D_CONT(canv, hitos2D_sig, hitos2D_bkg):
     #hitos2D_bkg.GetYaxis().SetTitleSize(0.15)
     hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
     hitos2D_bkg.Draw("CONT1")
+
+
+
+def CountYield(ana_cfg, histos, sys_name):
+
+    file = open('./BDTSys/BDTSys.txt', 'a')
+    print 'Printing event yield: '
+
+    '''
+    title = '{0:15}\t\t'.format('sample')
+    for sys_name in sys_names:
+        if sys_name == 'norm':
+            title = title + '{0:15}\t\t'.format(sys_name)
+        else:
+            title = title + '{0:15}\t\t{0:15}\t\t'.format(sys_name + '_up', sys_name + '_dn')
+    print title
+    file.write(title + '\n')
+
+    for sample in ana_cfg.samp_names:
+        line = '{0:15}\t'.format(sample)
+        for sys_name in sys_names:
+            if sys_name == 'norm':
+                line = line + '{0:15f}\t\t'.format(histos[sample]['norm'].Integral())
+            else:
+                line = line + '{0:15f}\t\t{0:15f}\t\t'.format(histos[sample][sys_name]['up'].Integral(), histos[sample][sys_name]['dn'].Integral())
+        print line
+        file.write(line + '\n')
+
+    '''
+    #title = 'sample \t\t normal'
+    if sys_name in ['ShowerShape', 'pho_scale', 'pho_smear', 'lep_scale', 'lep_smear']:
+        title = 'sample' + ' \t\t ' + sys_name + '_up' + ' \t\t ' + sys_name + '_dn'
+        #title = '{0:15}  {1:15}  {2:15}'.format('sample', sys_name + '_up', sys_name + '_dn')
+    else:
+        title = 'sample \t\t normal'
+        #title = '{0:15}  {1:15}'.format('sample', 'normal')
+    print title
+    file.write(title + '\n')
+    for sample in ana_cfg.bkg_names:
+        if sys_name in ['ShowerShape', 'pho_scale', 'pho_smear', 'lep_scale', 'lep_smear']:
+            line = '%s' %(sample) + ' \t\t ' + str(histos[sample][sys_name]['up'].Integral()) + ' \t\t ' + str(histos[sample][sys_name]['dn'].Integral())
+            #line = '{0:15}  {1:15d}  {2:15d}'.format(sample, histos[sample][sys_name]['up'].Integral(), histos[sample][sys_name]['dn'].Integral())
+        else:
+            line = '%s \t\t %f' %(sample, histos[sample]['norm'].Integral())
+            #line = '{0:15}  {1:15d}'.format(sample, histos[sample]['norm'].Integral())
+        print line
+        file.write(line + '\n')
+
+
+
+def CountNormalizationYield(ana_cfg, histos, sys_names):
+
+    file = open('./BDTSys/NormalizationSys.txt', 'a')
+    print 'Printing event yield: '
+
+
+    title = '{0:15}\t\t'.format('sample')
+    for sys_name in sys_names:
+            title = title + '{0:25}\t\t\t\t\t'.format(sys_name)
+    print title
+    file.write(title + '\n')
+
+    for sample in ana_cfg.sig_names:
+        line = '{0:10}\t'.format(sample)
+        for sys_name in sys_names:
+                line = line + '{0:15f} (unc:{1:5f})\t\t'.format(histos[sample][sys_name].Integral(),(histos[sample][sys_name].Integral()-histos[sample][sys_names[0]].Integral())/histos[sample][sys_names[0]].Integral())
+        print line
+        file.write(line + '\n')
+
+
+
+def CountBDTSys(ana_cfg, histos, sys_names):
+
+    file = open('./BDTSys/BDTSys.txt', 'a')
+    print 'Printing event yield: '
+
+
+    title = '{0:15}\t\t'.format('sample')
+    for sys_name in sys_names:
+        if sys_name=='norm':
+            title = title + '{0:25}\t\t\t\t\t'.format(sys_name)
+        else:
+            title = title + '{0:25}\t\t\t\t\t{1:25}\t\t\t\t\t'.format(sys_name+'_up',sys_name+'_dn')
+    print title
+    file.write(title + '\n')
+
+
+
+    for sample in ana_cfg.bkg_names:
+        norm = histos[sample][sys_names[0]].Integral()
+        line = '{0:10}\t'.format(sample)
+        for sys_name in sys_names:
+            if sys_name=='norm':
+                line = line + '{0:15f} \t\t'.format(histos[sample][sys_name].Integral())
+            else:
+                line = line + '{0:15f} (unc:{1:5f})\t\t{2:15f} (unc:{3:5f})\t\t'.format(histos[sample][sys_name]['up'].Integral(),(histos[sample][sys_name]['up'].Integral()-norm)/norm,histos[sample][sys_name]['dn'].Integral(),(histos[sample][sys_name]['dn'].Integral()-norm)/norm)
+        print line
+        file.write(line + '\n')

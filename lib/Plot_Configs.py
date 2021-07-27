@@ -9,6 +9,7 @@ class Plot_Config:
     	self.ana_cfg = ana_cfg
     	self.colors  = {}
     	self.logY    = False
+	self.year    = year
 	if year == '2016':
 		self.lumi    = '31.9'
 	elif year == '2017':
@@ -40,7 +41,7 @@ class Plot_Config:
 
 	self.colors["GGHToZG"] = kRed-7
 	self.colors["VBFHToZG"] = kRed-7
-	self.colors["QCD"] = kRed	
+	self.colors["QCD"] = kRed
 	self.colors["DY1JetsToLL"]  =  kAzure + 7
         self.colors["DY2JetsToLL"]  =  kAzure + 7
         self.colors["DY3JetsToLL"]  =  kAzure + 7
@@ -52,7 +53,7 @@ class Plot_Config:
     	self.colors["ZGGToLLGG"]  = kViolet +6
         self.colors["TGJets"] =  kOrange + 6
         self.colors["VHToGG"] =  kRed - 7
-	
+
 	#self.colors["WGGJets"]  = kOrange + 6
     	#self.colors["WWToLNuQQ"] =  kSpring +6
         #self.colors["WWW"] =  kGreen - 9

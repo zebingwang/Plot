@@ -16,13 +16,15 @@ from Analyzer_ALP import PIso2D, plot2D, plot2D_CONT
 
 import CMS_lumi, tdrstyle
 
-from xgboost import XGBClassifier
-import pickle
+#from xgboost import XGBClassifier
+#import pickle
 
 import argparse
 parser = argparse.ArgumentParser(description="A simple ttree plotter")
 parser.add_argument("-y", "--Year", dest="year", default="2017", help="which year's datasetes")
 parser.add_argument('-C', '--CR', dest='CR', action='store_true', default=False, help='make control region')
+parser.add_argument('-m', '--mva', dest='mva', action='store_true', default=False, help='use mva or not')
+parser.add_argument("--blind", dest="blind", default="store_true", default=False, help="Blind signal region?")
 args = parser.parse_args()
 
 mass = 'massIndependent'
@@ -32,34 +34,36 @@ mass = 'massIndependent'
 gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
-mva = False
-if mva:
+mva = args.mva
+if args.CR:
+    name = mass + '_CR'
+elif mva:
     name = mass + '_mva'
 else:
-    name = mass
+    name = mass+ '_SFs'
 
 if args.year == '2016':
     file_out = 'plots_16'
     out_name = "ALP_plot_data16_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2016.pkl"
-    mvaCut = 0.9381
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2016.pkl"
+    #mvaCut = 0.8675
 elif args.year == '2017':
     file_out = 'plots_17'
     out_name = "ALP_plot_data17_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2017.pkl"
-    mvaCut = 0.8571
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2017.pkl"
+    #mvaCut = 0.8365
 elif args.year == '2018':
     file_out = 'plots_18'
     out_name = "ALP_plot_data18_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2018.pkl"
-    mvaCut = 0.9204
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2018.pkl"
+    #mvaCut = 0.8923
 else:
     print "do not include at 2016/2017/2018"
     exit(0)
 
 file_plot = file_out + "/plot_"+name
 # load the model from disk
-model = pickle.load(open(BDT_filename, 'rb'))
+#model = pickle.load(open(BDT_filename, 'rb'))
 
 def main():
 
@@ -83,7 +87,7 @@ def main():
 
 
     #var_names = ['Z_m', 'H_m', 'ALP_m', 'pho1IetaIeta', 'pho1IetaIeta55', 'pho1PIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMa', 'var_PtaOverMh', 'var_Pta', 'var_MhMa', 'var_MhMZ', 'ALP_calculatedPhotonIso']
-    var_names = ['Z_m', 'H_m', 'ALP_m','pho1Pt', 'pho1eta', 'pho1phi', 'pho1R9', 'pho1IetaIeta', 'pho1IetaIeta55','pho1PIso_noCorr' ,'pho2Pt', 'pho2eta', 'pho2phi', 'pho2R9', 'pho2IetaIeta', 'pho2IetaIeta55','pho2PIso_noCorr','ALP_calculatedPhotonIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMh', 'var_Pta', 'var_MhMZ', 'H_pt', 'var_PtaOverMa', 'var_MhMa']
+    var_names = ['Z_m', 'H_m', 'ALP_m','pho1Pt', 'pho1eta', 'pho1phi', 'pho1R9', 'pho1IetaIeta', 'pho1IetaIeta55','pho1PIso_noCorr' ,'pho2Pt', 'pho2eta', 'pho2phi', 'pho2R9', 'pho2IetaIeta', 'pho2IetaIeta55','pho2PIso_noCorr','ALP_calculatedPhotonIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMh', 'var_Pta', 'var_MhMZ', 'H_pt', 'var_PtaOverMa', 'var_MhMa', 'mvaVal']
     plot_cfg = PC.Plot_Config(analyzer_cfg, args.year)
 
     ### declare histograms
@@ -121,6 +125,7 @@ def main():
         histos['var_MhMZ'][sample] = TH1F('var_MhMZ' + '_' + sample, 'var_MhMZ' + '_' + sample, 50, 120., 250.)
         histos['ALP_calculatedPhotonIso'][sample] = TH1F('ALP_calculatedPhotonIso' + '_' + sample, 'ALP_calculatedPhotonIso' + '_' + sample, 100, 0., 5.)
 
+        histos['mvaVal'][sample]    = TH1F('mvaVal'    + '_' + sample, 'mvaVal'    + '_' + sample, 50,  -0.1, 1.1)
 
 
     ### loop over samples and events
@@ -131,14 +136,14 @@ def main():
 
         for iEvt in range( ntup.GetEntries() ):
             ntup.GetEvent(iEvt)
-            #if (iEvt == 50000): break
+            #if (iEvt == 1): break
 
 
             if (iEvt % 100000 == 1):
                 print "looking at event %d" %iEvt
 
 
-            weight = ntup.factor
+            weight = ntup.factor * ntup.pho1SFs * ntup.pho2SFs
 
             if (ntup.H_m > -90):
 
@@ -148,17 +153,22 @@ def main():
                 if not ntup.passNeuHadIso: continue
                 if not ntup.passdR_gl: continue
                 if not ntup.passHOverE: continue
-                if ntup.H_m>130. or ntup.H_m<118.: continue
-                #if ntup.H_m<130. and ntup.H_m>118.: continue
+                if not args.CR:
+                    if ntup.H_m>130. or ntup.H_m<118.: continue
+                else:
+                    if ntup.H_m<130. and ntup.H_m>118.: continue
 
                 #if abs(ntup.l1_id)!=13: continue
 
                 #print 'pho1: pt:' + str(ntup.pho1Pt) + ', eta: ' + str(ntup.pho1eta) + ', SFs: ' + str(pho1_SFs)
                 if mva:
                     #MVA_list = [ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_PtaOverMh, ntup.var_MhMZ, ntup.var_dR_g1g2]
-                    MVA_list = [ntup.pho1Pt, ntup.pho1eta, ntup.pho1phi, ntup.pho1R9, ntup.pho1IetaIeta55 ,ntup.pho2Pt, ntup.pho2eta, ntup.pho2phi, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, ntup.var_Pta, ntup.var_MhMZ, ntup.H_pt ]
-                    MVA_value = model.predict_proba(MVA_list)[:, 1]
-                    if MVA_value < mvaCut:continue
+
+                    #MVA_list = [ntup.pho1Pt, ntup.pho1eta, ntup.pho1phi, ntup.pho1R9, ntup.pho1IetaIeta55 ,ntup.pho2Pt, ntup.pho2eta, ntup.pho2phi, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, ntup.var_Pta, ntup.var_MhMZ, ntup.H_pt ]
+                    #MVA_value = model.predict_proba(MVA_list)[:, 1]
+                    #if MVA_value < mvaCut:continue
+                    if ntup.passBDT < 0.5: continue
+
 
                 #histos['Z_befor50'][sample].Fill( ntup.Z_befor50, weight )
                 #if ntup.pho1Pt<15: continue
@@ -192,6 +202,14 @@ def main():
                 histos['var_MhMa'][sample].Fill( ntup.var_MhMa, weight )
                 histos['var_MhMZ'][sample].Fill( ntup.var_MhMZ, weight )
                 histos['ALP_calculatedPhotonIso'][sample].Fill( ntup.ALP_calculatedPhotonIso, weight )
+
+                if args.blind:
+                    if sample == 'data' and ntup.passBDT > 0.5:
+                        continue
+                    else:
+                        histos['mvaVal'][sample].Fill( ntup.Val_BDT, weight )
+                else:
+                    histos['mvaVal'][sample].Fill( ntup.Val_BDT, weight )
 
 
 
@@ -247,6 +265,9 @@ def main():
     print '\n\n'
     #CountYield(analyzer_cfg, histos['ALP_m'])
     out_file.Close()
+
+    #for sample in analyzer_cfg.samp_names:
+        #print sample + '\t\t' + str(histos['mvaVal'][sample].Integral())
 
     print 'Done'
 
