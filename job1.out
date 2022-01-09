@@ -1,0 +1,32 @@
+aliws002.ihep.ac.cn
+/publicfs/cms/user/wangzebing/ALP/Plot
+Running analysis in channel: inclusive
+getting ntuples from: /publicfs/cms/user/wangzebing/ALP/Analysis_out/run2
+using signals: 
+['M1', 'M5', 'M15', 'M30']
+using backgrounds:
+['DYJetsToLL']
+
+
+On sample: DYJetsToLL
+total events: 1413959
+looking at event 1
+looking at event 100001
+looking at event 200001
+looking at event 300001
+looking at event 400001
+looking at event 500001
+looking at event 600001
+looking at event 700001
+looking at event 800001
+looking at event 900001
+looking at event 1000001
+looking at event 1100001
+looking at event 1200001
+looking at event 1300001
+looking at event 1400001
+-0.0796454892751
+
+
+
+Done

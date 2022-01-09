@@ -14,140 +14,120 @@ import Plot_Configs     as PC
 
 from Analyzer_ALP import PIso2D, plot2D, plot2D_CONT
 
+import CMS_lumi, tdrstyle
+
 from xgboost import XGBClassifier
 import pickle
 
-mass = 'M15'
+import argparse
+parser = argparse.ArgumentParser(description="A simple ttree plotter")
+parser.add_argument("-y", "--Year", dest="year", default="2017", help="which year's datasetes")
+parser.add_argument('-C', '--CR', dest='CR', action='store_true', default=False, help='make control region')
+parser.add_argument('-m', '--mva', dest='mva', action='store_true', default=False, help='use mva or not')
+parser.add_argument('-b', '--blind', dest='blind', action='store_true', default=False, help='Blind signal region')
+args = parser.parse_args()
 
-if mass == 'M1':
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/model_ALP_M1.pkl"
-    mvaCut = 0.49
-elif mass == 'M5':
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/model_ALP_M5.pkl"
-    mvaCut = 0.858
-elif mass == 'M15':
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/model_ALP_M15.pkl"
-    mvaCut = 0.8632
+mass = 'massIndependent_OverSampling'
+
+
+
+gROOT.SetBatch(True)
+tdrstyle.setTDRStyle()
+
+mva = args.mva
+if args.CR:
+    name = mass + '_CR'
+elif mva:
+    name = mass + '_mva'
 else:
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/model_ALP_M30.pkl"
-    mvaCut = 0.7482
+    name = mass+ '_SFs'
 
+if args.year == '2016':
+    file_out = 'plots_16'
+    out_name = "ALP_plot_data16_"+name+".root"
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2016.pkl"
+    #mvaCut = 0.8675
+elif args.year == '2017':
+    file_out = 'plots_17'
+    out_name = "ALP_plot_data17_"+name+".root"
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2017.pkl"
+    #mvaCut = 0.8365
+elif args.year == '2018':
+    file_out = 'plots_18'
+    out_name = "ALP_plot_data18_"+name+".root"
+    #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2018.pkl"
+    #mvaCut = 0.8923
+    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_OverSampling_2018.pkl"
+    mvaCut = 0.8707
+else:
+    print "do not include at 2016/2017/2018"
+    exit(0)
+
+file_plot = file_out + "/plot_"+name
 # load the model from disk
 model = pickle.load(open(BDT_filename, 'rb'))
 
-gROOT.SetBatch(True)
-gStyle.SetOptStat(0)
-
 def main():
 
-    isEB = 1
+    if not os.path.exists(file_out):
+        os.makedirs(file_out)
 
-    mva = False
-    if mva:
-        name = mass + '_mva'
-    else:
-        name = mass
+    if not os.path.exists(file_plot):
+        os.makedirs(file_plot)
 
-    out_name = "ALP_plot_data17_"+name+".root"
+    out_file = TFile( file_out + '/' + out_name , "RECREATE")
 
-    if not os.path.exists('plots'):
-        os.makedirs('plots')
-    out_file = TFile( "plots/" + out_name , "RECREATE")
+    analyzer_cfg = AC.Analyzer_Config('inclusive', mass,args.year)
 
-    analyzer_cfg = AC.Analyzer_Config('inclusive', mass)
+    ############ CR plots#########
+    #if args.CR:
+        #analyzer_cfg.sample_loc = analyzer_cfg.sample_loc.replace('massInde','massInde/CR')
+        #analyzer_cfg.sig_names  = ['']
+    ##############################
     analyzer_cfg.Print_Config()
     ntuples = LoadNtuples(analyzer_cfg)
 
 
-    var_names = ['Z_m', 'H_m', 'ALP_m', 'pho1IetaIeta', 'pho1IetaIeta55', 'pho1PIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMa', 'var_PtaOverMh', 'var_Pta', 'var_MhMa', 'var_MhMZ', 'ALP_calculatedPhotonIso']
-    plot_cfg = PC.Plot_Config(analyzer_cfg)
-    #var_names = ['Z_befor50']
+    #var_names = ['Z_m', 'H_m', 'ALP_m', 'pho1IetaIeta', 'pho1IetaIeta55', 'pho1PIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMa', 'var_PtaOverMh', 'var_Pta', 'var_MhMa', 'var_MhMZ', 'ALP_calculatedPhotonIso']
+    var_names = ['Z_m', 'H_m', 'ALP_m','pho1Pt', 'pho1eta', 'pho1phi', 'pho1R9', 'pho1IetaIeta', 'pho1IetaIeta55','pho1PIso_noCorr' ,'pho2Pt', 'pho2eta', 'pho2phi', 'pho2R9', 'pho2IetaIeta', 'pho2IetaIeta55','pho2PIso_noCorr','ALP_calculatedPhotonIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMh', 'var_Pta', 'var_MhMZ', 'H_pt', 'var_PtaOverMa', 'var_MhMa', 'mvaVal']
+    plot_cfg = PC.Plot_Config(analyzer_cfg, args.year)
 
     ### declare histograms
 
     histos = {}
 
-    histos['phoPIso2D'] = {}
-    histos['phoPIso2D']['sig']    = TH2F('PIsoVSPt_sig', 'PIsoVSPt_sig', 100,  -10., 10., 100, 0., 30)#2D
-    histos['phoPIso2D']['sig_noCorr']    = TH2F('PIsoVSPt_signoCorr', 'PIsoVSPt_signoCorr', 100,  0., 25., 100, 0., 30)#2D
-    histos['phoPIso2D']['data']    = TH2F('PIsoVSPt_data', 'PIsoVSPt_data', 100,  -10., 10., 100, 0., 30)#2D
-    histos['phoPIso2D']['data_noCorr']    = TH2F('PIsoVSPt_datanoCorr', 'PIsoVSPt_datanoCorr', 100,  0., 25., 100, 0., 30)#2D
-
-    histos['pho1PIso2D'] = {}
-    histos['pho1PIso2D']['sig']    = TH2F('pho1PIsoVSPt_sig', 'pho1PIsoVSPt_sig', 100,  -10., 10., 100, 0., 30)#2D
-    histos['pho1PIso2D']['sig_noCorr']    = TH2F('pho1PIsoVSPt_signoCorr', 'pho1PIsoVSPt_signoCorr', 100,  0., 25., 100, 0., 30)#2D
-    histos['pho1PIso2D']['data']    = TH2F('pho1PIsoVSPt_data', 'pho1PIsoVSPt_data', 100,  -10., 10., 100, 0., 30)#2D
-    histos['pho1PIso2D']['data_noCorr']    = TH2F('pho1PIsoVSPt_datanoCorr', 'pho1PIsoVSPt_datanoCorr', 100,  0., 25., 100, 0., 30)#2D
-    histos['pho2PIso2D'] = {}
-    histos['pho2PIso2D']['sig']    = TH2F('pho2PIsoVSPt_sig', 'pho2PIsoVSPt_sig', 100,  -10., 10., 100, 0., 30)#2D
-    histos['pho2PIso2D']['sig_noCorr']    = TH2F('pho2PIsoVSPt_signoCorr', 'pho2PIsoVSPt_signoCorr', 100,  0., 25., 100, 0., 30)#2D
-    histos['pho2PIso2D']['data']    = TH2F('pho2PIsoVSPt_data', 'pho2PIsoVSPt_data', 100,  -10., 10., 100, 0., 30)#2D
-    histos['pho2PIso2D']['data_noCorr']    = TH2F('pho2PIsoVSPt_datanoCorr', 'pho2PIsoVSPt_datanoCorr', 100,  0., 25., 100, 0., 30)#2D
-
-    histos['phoIetaIeta'] = {}
-    histos['phoIetaIeta']["sig"]    = TH2F('phoIetaIeta_sig', 'phoIetaIeta_sig', 100,  0., 0.06, 100, 0., 0.06)#2D
-    histos['phoIetaIeta']["data"]    = TH2F('phoIetaIeta_data', 'phoIetaIeta_data', 100,  0., 0.06, 100, 0., 0.06)#2D
-    histos['phoIetaIeta55'] = {}
-    histos['phoIetaIeta55']["sig"]    = TH2F('phoIetaIeta55_sig', 'phoIetaIeta55_sig', 100,  0., 0.06, 100, 0., 0.06)#2D
-    histos['phoIetaIeta55']["data"]    = TH2F('phoIetaIeta55_data', 'phoIetaIeta55_data', 100,  0., 0.06, 100, 0., 0.06)#2D
-
-    histos['phoHOE'] = {}
-    histos['phoHOE']["sig"]    = TH2F('phoHOE_sig', 'phoHOE_sig', 100,  0.005, 0.1, 100, 0.005, 0.1)#2D
-    histos['phoHOE']["data"]    = TH2F('phoHOE_data', 'phoHOE_data', 100,  0.005, 0.1, 100, 0.005, 0.1)#2D
-
-    histos['phoPIso'] = {}
-    histos['phoPIso']['sig']    = TH2F('phoPIso_sig', 'phoPIso_sig', 100,  -10., 10., 100, -10., 10)#2D
-    histos['phoPIso']['data']    = TH2F('phoPIso_data', 'phoPIso_data', 100,  -10., 10., 100, -10., 10)#2D
-    histos['phoPIso']['sig_noCorr']    = TH2F('phoPIso_signoCorr', 'phoPIso_signoCorr', 100,  0., 30., 100, 0., 30)#2D
-    histos['phoPIso']['data_noCorr']    = TH2F('phoPIso_datanoCorr', 'phoPIso_datanoCorr', 100,  0., 30., 100, 0., 30)#2D
-
-    histos['MhVsMhMZ'] = {}
-    histos['MhVsMhMZ']['sig']    = TH2F('MhVsMhMZ_sig', 'MhVsMhMZ_sig', 50,  180., 250., 50, 100., 160)#2D
-    histos['MhVsMhMZ']['data']    = TH2F('MhVsMhMZ_data', 'MhVsMhMZ_data', 50,  180., 250., 50, 100., 160)#2D
-
     for var_name in var_names:
         histos[var_name] = {}
     for sample in analyzer_cfg.samp_names:
-        #x = [0.2*i for i in range(15)]
-        #x.append(3.0)
-        #x.append(5.0)
-        #x_bin = np.array(x)
-        #histos['Z_befor50'][sample]    = TH1F('Z_m'    + '_' + sample, 'Z_m'    + '_' + sample, 100,  50., 130.)
-
-
-        histos['Z_m'][sample]    = TH1F('Z_m'    + '_' + sample, 'Z_m'    + '_' + sample, 100,  50., 130.)
-        histos['H_m'][sample]    = TH1F('H_m'    + '_' + sample, 'H_m'    + '_' + sample, 30,  100., 180.)
-        #histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, len(x)-1, x_bin)
-        if mass == 'M1':
-            histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 20, 0., 10.)
-            histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 50, 0., 0.15)
-            histos['var_PtaOverMa'][sample] = TH1F('var_PtaOverMa' + '_' + sample, 'var_PtaOverMa' + '_' + sample, 100, 0., 200.)
-        elif mass == 'M5':
-            histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 20, 0., 10.)
-            histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 50, 0., 0.55)
-            histos['var_PtaOverMa'][sample] = TH1F('var_PtaOverMa' + '_' + sample, 'var_PtaOverMa' + '_' + sample, 50, 0., 30.)
-        elif mass == 'M15':
-            histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 50, 0., 50.)
-            histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 50, 0., 2)
-            histos['var_PtaOverMa'][sample] = TH1F('var_PtaOverMa' + '_' + sample, 'var_PtaOverMa' + '_' + sample, 50, 0., 12.)
-        else:
-            histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 50, 0., 70.)
-            histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 50, 0., 6)
-            histos['var_PtaOverMa'][sample] = TH1F('var_PtaOverMa' + '_' + sample, 'var_PtaOverMa' + '_' + sample, 50, 0., 12.)
-        #histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 50, 0., 50.)
-        histos['var_dR_Za'][sample] = TH1F('var_dR_Za' + '_' + sample, 'var_dR_Za' + '_' + sample, 50, 0., 7.)
-
-        histos['var_dR_g1Z'][sample] = TH1F('var_dR_g1Z' + '_' + sample, 'var_dR_g1Z' + '_' + sample, 50, 0., 8.)
-
-        histos['var_PtaOverMh'][sample] = TH1F('var_PtaOverMh' + '_' + sample, 'var_PtaOverMh' + '_' + sample, 100, 0., 1.)
-        histos['var_Pta'][sample] = TH1F('var_Pta' + '_' + sample, 'var_Pta' + '_' + sample, 50, 20., 60.)
-        histos['var_MhMa'][sample] = TH1F('var_MhMa' + '_' + sample, 'var_MhMa' + '_' + sample, 50, 50., 400.)
-        histos['var_MhMZ'][sample] = TH1F('var_MhMZ' + '_' + sample, 'var_MhMZ' + '_' + sample, 50, 100., 500.)
-        histos['ALP_calculatedPhotonIso'][sample] = TH1F('ALP_calculatedPhotonIso' + '_' + sample, 'ALP_calculatedPhotonIso' + '_' + sample, 100, 0., 5.)
-
+        histos['pho1Pt'][sample]    = TH1F('pho1Pt'    + '_' + sample, 'pho1Pt'    + '_' + sample, 50,  5., 50.)
+        histos['pho1eta'][sample]    = TH1F('pho1eta'    + '_' + sample, 'pho1eta'    + '_' + sample, 100,  -3., 3.)
+        histos['pho1phi'][sample]    = TH1F('pho1phi'    + '_' + sample, 'pho1phi'    + '_' + sample, 100,  -4., 4.)
+        histos['pho1R9'][sample]    = TH1F('pho1R9'    + '_' + sample, 'pho1R9'    + '_' + sample, 100,  0., 1.)
         histos['pho1IetaIeta'][sample]    = TH1F('pho1IetaIeta'    + '_' + sample, 'pho1IetaIeta'    + '_' + sample, 100,  0., 0.07)
         histos['pho1IetaIeta55'][sample]    = TH1F('pho1IetaIeta55'    + '_' + sample, 'pho1IetaIeta55'    + '_' + sample, 100,  0., 0.07)
-        histos['pho1PIso'][sample]    = TH1F('pho1PIso'    + '_' + sample, 'pho1PIso'    + '_' + sample, 100, 0., 40.)
+        histos['pho1PIso_noCorr'][sample]    = TH1F('pho1PIso_noCorr'    + '_' + sample, 'pho1PIso_noCorr'    + '_' + sample, 100, 0., 40.)
+        histos['pho2Pt'][sample]    = TH1F('pho2Pt'    + '_' + sample, 'pho2Pt'    + '_' + sample, 50,  5., 30.)
+        histos['pho2eta'][sample]    = TH1F('pho2eta'    + '_' + sample, 'pho2eta'    + '_' + sample, 100,  -3., 3.)
+        histos['pho2phi'][sample]    = TH1F('pho2phi'    + '_' + sample, 'pho2phi'    + '_' + sample, 100,  -4., 4.)
+        histos['pho2R9'][sample]    = TH1F('pho2R9'    + '_' + sample, 'pho2R9'    + '_' + sample, 100,  0., 1.)
+        histos['pho2IetaIeta'][sample]    = TH1F('pho2IetaIeta'    + '_' + sample, 'pho2IetaIeta'    + '_' + sample, 100,  0., 0.07)
+        histos['pho2IetaIeta55'][sample]    = TH1F('pho2IetaIeta55'    + '_' + sample, 'pho2IetaIeta55'    + '_' + sample, 100,  0., 0.07)
+        histos['pho2PIso_noCorr'][sample]    = TH1F('pho2PIso_noCorr'    + '_' + sample, 'pho2PIso_noCorr'    + '_' + sample, 100, 0., 40.)
+        histos['Z_m'][sample]    = TH1F('Z_m'    + '_' + sample, 'Z_m'    + '_' + sample, 100,  50., 130.)
+        histos['H_m'][sample]    = TH1F('H_m'    + '_' + sample, 'H_m'    + '_' + sample, 20,  118., 140.)
+        histos['H_pt'][sample]    = TH1F('H_pt'    + '_' + sample, 'H_pt'    + '_' + sample, 100,  0., 200.)
+        histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 50, 0., 40.)
+        histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 50, 0., 5)
+        histos['var_PtaOverMa'][sample] = TH1F('var_PtaOverMa' + '_' + sample, 'var_PtaOverMa' + '_' + sample, 100, 0., 100.)
+        histos['var_dR_Za'][sample] = TH1F('var_dR_Za' + '_' + sample, 'var_dR_Za' + '_' + sample, 50, 0., 7.)
+        histos['var_dR_g1Z'][sample] = TH1F('var_dR_g1Z' + '_' + sample, 'var_dR_g1Z' + '_' + sample, 50, 0., 8.)
+        histos['var_PtaOverMh'][sample] = TH1F('var_PtaOverMh' + '_' + sample, 'var_PtaOverMh' + '_' + sample, 100, 0., 1.)
+        histos['var_Pta'][sample] = TH1F('var_Pta' + '_' + sample, 'var_Pta' + '_' + sample, 50, 0., 60.)
+        histos['var_MhMa'][sample] = TH1F('var_MhMa' + '_' + sample, 'var_MhMa' + '_' + sample, 50, 100., 200.)
+        histos['var_MhMZ'][sample] = TH1F('var_MhMZ' + '_' + sample, 'var_MhMZ' + '_' + sample, 50, 120., 250.)
+        histos['ALP_calculatedPhotonIso'][sample] = TH1F('ALP_calculatedPhotonIso' + '_' + sample, 'ALP_calculatedPhotonIso' + '_' + sample, 100, 0., 5.)
+
+        histos['mvaVal'][sample]    = TH1F('mvaVal'    + '_' + sample, 'mvaVal'    + '_' + sample, 50,  -0.1, 1.1)
 
 
     ### loop over samples and events
@@ -158,56 +138,63 @@ def main():
 
         for iEvt in range( ntup.GetEntries() ):
             ntup.GetEvent(iEvt)
-            #if (iEvt == 50): break
+            #if (iEvt == 1): break
 
 
             if (iEvt % 100000 == 1):
                 print "looking at event %d" %iEvt
 
 
-            weight = ntup.factor
-            #weight = ntup.event_weight
+            weight = ntup.factor * ntup.pho1SFs * ntup.pho2SFs
 
-            #if (ntup.Z_m > -90):
-                #histos['Z_m'][sample].Fill( ntup.Z_m, weight )
-                #histos['H_m'][sample].Fill( ntup.H_m, weight )
-                #histos['ALP_m'][sample].Fill( ntup.ALP_m, weight )
-                #if (ntup.ALP_m > 5.0):
-                    #histos['ALP_m'][sample].AddBinContent(len(x)-1,weight)
+            if (ntup.H_m > -90):
 
-
-
-            if (ntup.Z_dR > -90):
-
-
-
-                #if ntup.H_pho_veto>130. or ntup.H_pho_veto<118.: continue
-
-
-                if mass == 'M1':
-                    cutdR_gg = ntup.dR_pho < 0.15 ## 1GeV
-                elif mass == 'M5':
-                    cutdR_gg = 0.1 < ntup.dR_pho < 0.5 ## 5GeV
-                elif mass == 'M15':
-                    cutdR_gg = 0.2 < ntup.dR_pho < 2 ## 15 GeV
-                else:
-                    cutdR_gg = 1. < ntup.dR_pho < 3.2  ## 30 GeV
-
-                if not cutdR_gg: continue
+                #if ntup.dR_pho < 0.02: continue
+                #if not ntup.passEleVeto: continue
+                if not ntup.passChaHadIso: continue
+                if not ntup.passNeuHadIso: continue
+                if not ntup.passdR_gl: continue
                 if not ntup.passHOverE: continue
+                if not args.CR:
+                    if ntup.H_m>130. or ntup.H_m<118.: continue
+                else:
+                    if ntup.H_m<130. and ntup.H_m>118.: continue
+
                 #if abs(ntup.l1_id)!=13: continue
 
+                #print 'pho1: pt:' + str(ntup.pho1Pt) + ', eta: ' + str(ntup.pho1eta) + ', SFs: ' + str(pho1_SFs)
                 if mva:
-                    MVA_list = [ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_PtaOverMa, ntup.var_PtaOverMh, ntup.var_MhMZ]
+                    #MVA_list = [ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_PtaOverMh, ntup.var_MhMZ, ntup.var_dR_g1g2]
+
+                    MVA_list = [ntup.pho1Pt, ntup.pho1eta, ntup.pho1phi, ntup.pho1R9, ntup.pho1IetaIeta55 ,ntup.pho2Pt, ntup.pho2eta, ntup.pho2phi, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, ntup.var_Pta, ntup.var_MhMZ, ntup.H_pt ]
                     MVA_value = model.predict_proba(MVA_list)[:, 1]
                     if MVA_value < mvaCut:continue
+                    #if ntup.passBDT < 0.5: continue
+
 
                 #histos['Z_befor50'][sample].Fill( ntup.Z_befor50, weight )
                 #if ntup.pho1Pt<15: continue
+                histos['pho1Pt'][sample].Fill( ntup.pho1Pt, weight )
+                histos['pho1eta'][sample].Fill( ntup.pho1eta, weight )
+                histos['pho1phi'][sample].Fill( ntup.pho1phi, weight )
+                histos['pho1R9'][sample].Fill( ntup.pho1R9, weight )
+                histos['pho1IetaIeta'][sample].Fill( ntup.pho1IetaIeta, weight )
+                histos['pho1IetaIeta55'][sample].Fill( ntup.pho1IetaIeta55, weight )
+                histos['pho1PIso_noCorr'][sample].Fill( ntup.pho1PIso_noCorr, weight )
+                histos['pho2Pt'][sample].Fill( ntup.pho2Pt, weight )
+                histos['pho2eta'][sample].Fill( ntup.pho2eta, weight )
+                histos['pho2phi'][sample].Fill( ntup.pho2phi, weight )
+                histos['pho2R9'][sample].Fill( ntup.pho2R9, weight )
+                histos['pho2IetaIeta'][sample].Fill( ntup.pho2IetaIeta, weight )
+                histos['pho2IetaIeta55'][sample].Fill( ntup.pho2IetaIeta55, weight )
+                histos['pho2PIso_noCorr'][sample].Fill( ntup.pho2PIso_noCorr, weight )
 
-                histos['H_m'][sample].Fill( ntup.H_pho_veto, weight )
-                histos['ALP_m'][sample].Fill( ntup.ALP_pho_veto, weight )
-                histos['Z_m'][sample].Fill( ntup.Z_pho_veto, weight )
+
+                histos['H_m'][sample].Fill( ntup.H_m, weight )
+                histos['H_pt'][sample].Fill( ntup.H_pt, weight )
+                histos['ALP_m'][sample].Fill( ntup.ALP_m, weight )
+                histos['Z_m'][sample].Fill( ntup.Z_m, weight )
+
                 histos['var_dR_Za'][sample].Fill( ntup.var_dR_Za, weight )
                 histos['var_dR_g1g2'][sample].Fill( ntup.var_dR_g1g2, weight )
                 histos['var_dR_g1Z'][sample].Fill( ntup.var_dR_g1Z, weight )
@@ -218,53 +205,13 @@ def main():
                 histos['var_MhMZ'][sample].Fill( ntup.var_MhMZ, weight )
                 histos['ALP_calculatedPhotonIso'][sample].Fill( ntup.ALP_calculatedPhotonIso, weight )
 
-                histos['pho1IetaIeta'][sample].Fill( ntup.pho1IetaIeta, weight )
-                histos['pho1IetaIeta55'][sample].Fill( ntup.pho1IetaIeta55, weight )
-                histos['pho1PIso'][sample].Fill( ntup.pho1PIso_noCorr, weight )
-
-                histos['pho1IetaIeta'][sample].Fill( ntup.pho2IetaIeta, weight )
-                histos['pho1IetaIeta55'][sample].Fill( ntup.pho2IetaIeta55, weight )
-                histos['pho1PIso'][sample].Fill( ntup.pho2PIso_noCorr, weight )
-
-                if sample == 'M1':
-                    histos['phoIetaIeta']["sig"].Fill(ntup.pho1IetaIeta, ntup.pho2IetaIeta, weight)
-                    histos['phoIetaIeta55']["sig"].Fill(ntup.pho1IetaIeta55, ntup.pho2IetaIeta55, weight)
-                    histos['phoHOE']["sig"].Fill(ntup.pho1HOE, ntup.pho2HOE, weight)
-                    histos['phoPIso']['sig'].Fill(ntup.pho1PIso, ntup.pho2PIso, weight)
-                    histos['phoPIso']['sig_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho2PIso_noCorr, weight)
-
-                    histos['phoPIso2D']['sig'].Fill(ntup.pho1PIso, ntup.pho1Pt, weight)
-                    histos['phoPIso2D']['sig_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho1Pt, weight)
-                    histos['pho1PIso2D']['sig'].Fill(ntup.pho1PIso, ntup.pho1Pt, weight)
-                    histos['pho1PIso2D']['sig_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho1Pt, weight)
-
-                    histos['phoPIso2D']['sig'].Fill(ntup.pho2PIso, ntup.pho2Pt, weight)
-                    histos['phoPIso2D']['sig_noCorr'].Fill(ntup.pho2PIso_noCorr, ntup.pho2Pt, weight)
-                    histos['pho2PIso2D']['sig'].Fill(ntup.pho2PIso, ntup.pho2Pt, weight)
-                    histos['pho2PIso2D']['sig_noCorr'].Fill(ntup.pho2PIso_noCorr, ntup.pho2Pt, weight)
-
-                    histos['MhVsMhMZ']['sig'].Fill(ntup.var_MhMZ, ntup.H_HOE, weight)
-                if sample == 'data':
-                    histos['phoIetaIeta']["data"].Fill(ntup.pho1IetaIeta, ntup.pho2IetaIeta, weight)
-                    histos['phoIetaIeta55']["data"].Fill(ntup.pho1IetaIeta55, ntup.pho2IetaIeta55, weight)
-                    histos['phoHOE']["data"].Fill(ntup.pho1HOE, ntup.pho2HOE, weight)
-                    histos['phoPIso']['data'].Fill(ntup.pho1PIso, ntup.pho2PIso, weight)
-                    histos['phoPIso']['data_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho2PIso_noCorr, weight)
-
-                    histos['phoPIso2D']['data'].Fill(ntup.pho1PIso, ntup.pho1Pt, weight)
-                    histos['phoPIso2D']['data_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho1Pt, weight)
-                    histos['pho1PIso2D']['data'].Fill(ntup.pho1PIso, ntup.pho1Pt, weight)
-                    histos['pho1PIso2D']['data_noCorr'].Fill(ntup.pho1PIso_noCorr, ntup.pho1Pt, weight)
-
-                    histos['phoPIso2D']['data'].Fill(ntup.pho2PIso, ntup.pho2Pt, weight)
-                    histos['phoPIso2D']['data_noCorr'].Fill(ntup.pho2PIso_noCorr, ntup.pho2Pt, weight)
-                    histos['pho2PIso2D']['data'].Fill(ntup.pho2PIso, ntup.pho2Pt, weight)
-                    histos['pho2PIso2D']['data_noCorr'].Fill(ntup.pho2PIso_noCorr, ntup.pho2Pt, weight)
-
-                    histos['MhVsMhMZ']['data'].Fill(ntup.var_MhMZ, ntup.H_HOE, weight)
-
-
-
+                if args.blind:
+                    if sample == 'data' and ntup.passBDT > 0.5:
+                        continue
+                    else:
+                        histos['mvaVal'][sample].Fill( ntup.Val_BDT, weight )
+                else:
+                    histos['mvaVal'][sample].Fill( ntup.Val_BDT, weight )
 
 
 
@@ -284,25 +231,29 @@ def main():
     lumi_label = MakeLumiLabel(plot_cfg.lumi)
     cms_label  = MakeCMSDASLabel()
 
+    scaled_sig = {}
     for var_name in var_names:
         stacks = MakeStack(histos[var_name], analyzer_cfg, var_name)
-        scaled_sig = 0
+        #scaled_sig = 0
         #ratio_plot = 0
-        scaled_sig = ScaleSignal(plot_cfg, stacks['sig'], histos[var_name], var_name)
+        for sample in analyzer_cfg.sig_names:
+            scaled_sig[sample] = ScaleSignal(plot_cfg, stacks[sample], histos[var_name][sample], var_name)
         ratio_plot = MakeRatioPlot(histos[var_name]['data'], stacks['all'].GetStack().Last(), var_name)
         legend = MakeLegend(plot_cfg, histos[var_name], scaled_sig)
 
         canv = CreateCanvas(var_name)
-        DrawOnCanv(canv, var_name, plot_cfg, stacks, histos[var_name], scaled_sig, ratio_plot, legend, lumi_label, cms_label, logY=False)
+        DrawOnCanv(canv, var_name, plot_cfg, stacks, histos[var_name], scaled_sig, ratio_plot, legend, lumi_label, cms_label,logY=False)
 
         canv.Write()
-        SaveCanvPic(canv, "plots/plot_"+name, var_name)
+        SaveCanvPic(canv, file_plot, var_name)
+
 
     for var_name in var_names:
         stacks = MakeStack(histos[var_name], analyzer_cfg, var_name)
-        scaled_sig = 0
+        #scaled_sig = 0
         #ratio_plot = 0
-        scaled_sig = ScaleSignal(plot_cfg, stacks['sig'], histos[var_name], var_name)
+        for sample in analyzer_cfg.sig_names:
+            scaled_sig[sample] = ScaleSignal(plot_cfg, stacks[sample], histos[var_name][sample], var_name)
         ratio_plot = MakeRatioPlot(histos[var_name]['data'], stacks['all'].GetStack().Last(), var_name)
         legend = MakeLegend(plot_cfg, histos[var_name], scaled_sig)
 
@@ -310,65 +261,15 @@ def main():
         DrawOnCanv(canv, var_name, plot_cfg, stacks, histos[var_name], scaled_sig, ratio_plot, legend, lumi_label, cms_label, logY=True)
 
         canv.Write()
-        SaveCanvPic(canv, "plots/plot_"+name, var_name+'_log')
-
-
-
-    '''
-    canv2D = CreateCanvas("MhVsMhMZ")
-    plot2D(canv2D, histos['MhVsMhMZ']['sig'], histos['MhVsMhMZ']['data'])
-    canv2D.Write()
-
-    canv2D_CONT = CreateCanvas("MhVsMhMZ_CONT")
-    plot2D_CONT(canv2D_CONT, histos['MhVsMhMZ']['sig'], histos['MhVsMhMZ']['data'])
-    canv2D_CONT.Write()
-
-
-    canv2D_noCorr = CreateCanvas("PIso2D_noCorr")
-    PIso2D(canv2D_noCorr, histos['phoPIso2D']['sig_noCorr'], histos['phoPIso2D']['data_noCorr'], isEB)
-    canv2D_noCorr.Write()
-
-    canv2D_pho1 = CreateCanvas("pho1PIso2D")
-    PIso2D(canv2D_pho1, histos['pho1PIso2D']['sig'], histos['pho1PIso2D']['data'], isEB)
-    canv2D_pho1.Write()
-
-    canv2D_pho2 = CreateCanvas("pho2PIso2D")
-    PIso2D(canv2D_pho2, histos['pho2PIso2D']['sig'], histos['pho2PIso2D']['data'], isEB)
-    canv2D_pho2.Write()
-
-    canv2D_pho1_noCorr = CreateCanvas("pho1PIso2D_noCorr")
-    PIso2D(canv2D_pho1_noCorr, histos['pho1PIso2D']['sig_noCorr'], histos['pho1PIso2D']['data_noCorr'], isEB)
-    canv2D_pho1_noCorr.Write()
-
-    canv2D_pho2_noCorr = CreateCanvas("pho2PIso2D_noCorr")
-    PIso2D(canv2D_pho2_noCorr, histos['pho2PIso2D']['sig_noCorr'], histos['pho2PIso2D']['data_noCorr'], isEB)
-    canv2D_pho2_noCorr.Write()
-
-    canv2D_IeIe = CreateCanvas("IeIe")
-    plot2D(canv2D_IeIe, histos['phoIetaIeta']["sig"], histos['phoIetaIeta']["data"])
-    canv2D_IeIe.Write()
-
-    canv2D_IeIe55 = CreateCanvas("IeIe55")
-    plot2D(canv2D_IeIe55, histos['phoIetaIeta55']["sig"], histos['phoIetaIeta55']["data"])
-    canv2D_IeIe55.Write()
-
-    canv2D_HOE = CreateCanvas("HOE")
-    plot2D(canv2D_HOE, histos['phoHOE']["sig"], histos['phoHOE']["data"])
-    canv2D_HOE.Write()
-
-    #canv2D_PIso = CreateCanvas("PIso")
-    #plot2D(canv2D_PIso, histos['phoPIso']['sig'], histos['phoPIso']['data'])
-    #canv2D_PIso.Write()
-
-    canv2D_PIso_noCorr = CreateCanvas("PIso_noCorr")
-    plot2D(canv2D_PIso_noCorr, histos['phoPIso']['sig_noCorr'], histos['phoPIso']['data_noCorr'])
-    #canv2D_PIso_noCorr.Write()
-    '''
+        SaveCanvPic(canv, file_plot, var_name+'_log')
 
 
     print '\n\n'
     #CountYield(analyzer_cfg, histos['ALP_m'])
     out_file.Close()
+
+    #for sample in analyzer_cfg.samp_names:
+        #print sample + '\t\t' + str(histos['mvaVal'][sample].Integral())
 
     print 'Done'
 

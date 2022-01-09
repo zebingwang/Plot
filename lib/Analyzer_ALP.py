@@ -3,7 +3,8 @@ import sys
 import Plot_Configs as PC
 import Analyzer_Configs as AC
 from ROOT import *
-
+from array import array
+#from ROOT import TColor
 #####################################################################
 
 def getVariableHistsEventsNumber(Tree,varName,sample,cut):
@@ -511,31 +512,50 @@ def PIso2D(canv, hitos2D_sig, hitos2D_bkg, isEB):
     l2.Draw("SAME")
 
 
-def plot2D(canv, hitos2D_sig, hitos2D_bkg):
+def plot2D(canv, hitos2D_sig):
 
     canv.SetBottomMargin(0.1)
     canv.cd()
 
-    upper_pad = TPad("upperpad", "upperpad", 0,0.505, 1,1)
+    upper_pad = TPad("upperpad", "upperpad", 0.05,0.05, 0.95,0.95)
     upper_pad.Draw()
     upper_pad.cd()
-    hitos2D_sig.GetXaxis().SetTitle("Mh+MZ")
-    #hitos2D_sig.GetXaxis().SetTitleSize(0.15)
-    hitos2D_sig.GetYaxis().SetTitle("Mh")
-    #hitos2D_sig.GetYaxis().SetTitleSize(0.15)
+    hitos2D_sig.GetXaxis().SetTitle("M_{#gamma#gamma}")
+    hitos2D_sig.GetXaxis().SetTitleSize(0.05)
+    hitos2D_sig.GetYaxis().SetTitle("mvaVal")
+    hitos2D_sig.GetYaxis().SetTitleSize(0.05)
     hitos2D_sig.GetYaxis().SetTitleOffset(1.0)
+    gStyle.SetOptStat(0)
+    '''
+    stops = [ 0.00, 0.50, 1.00 ]
+    red   = [ 1.00, 0.00, 0.00 ]
+    green = [ 0.00, 1.00, 0.00 ]
+    blue  = [ 0.00, 0.00, 1.00 ]
+    s = array('d', stops)
+    r = array('d', red)
+    g = array('d', green)
+    b = array('d', blue)
+    npoints = len(s)
+    TColor.CreateGradientColorTable(npoints, s, r, g, b, 50)
+    gStyle.SetNumberContours(50)
+    '''
+    gStyle.SetPalette(kGreyScale)
+    TColor.InvertPalette()
+    
     hitos2D_sig.Draw("COLZ")
+    lt = TLatex();
+    lt.DrawLatexNDC(0.3,0.8,"Correlation: {:.3g}".format(hitos2D_sig.GetCorrelationFactor()))
 
-    canv.cd()
-    lower_pad = TPad("lowerpad", "lowerpad_", 0, 0.025, 1,0.495)
-    lower_pad.Draw()
-    lower_pad.cd()
-    hitos2D_bkg.GetXaxis().SetTitle("Mh+MZ")
+    #canv.cd()
+    #lower_pad = TPad("lowerpad", "lowerpad_", 0, 0.025, 1,0.495)
+    #lower_pad.Draw()
+    #lower_pad.cd()
+    #hitos2D_bkg.GetXaxis().SetTitle("M_{llgg}")
     #hitos2D_bkg.GetXaxis().SetTitleSize(0.15)
-    hitos2D_bkg.GetYaxis().SetTitle("Mh")
+    #hitos2D_bkg.GetYaxis().SetTitle("mvaVal")
     #hitos2D_bkg.GetYaxis().SetTitleSize(0.15)
-    hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
-    hitos2D_bkg.Draw("COLZ")
+    #hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
+    #hitos2D_bkg.Draw("COLZ")
 
 def plot2D_CONT(canv, hitos2D_sig, hitos2D_bkg):
 
@@ -620,7 +640,7 @@ def CountNormalizationYield(ana_cfg, histos, sys_names):
 
     title = '{0:15}\t\t'.format('sample')
     for sys_name in sys_names:
-            title = title + '{0:25}\t\t\t\t\t'.format(sys_name)
+            title = title + '{0:25}\t\t\t'.format(sys_name)
     print title
     file.write(title + '\n')
 

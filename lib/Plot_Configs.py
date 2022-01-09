@@ -16,6 +16,8 @@ class Plot_Config:
 		self.lumi    = '41.5'
 	elif year == '2018':
     		self.lumi    = '56.96'
+	elif year == 'run2':
+		self.lumi    = '134.3'
 	else:
 		print 'do not in 2016/2017/2018!'
 		exit(0)
