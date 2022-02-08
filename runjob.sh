@@ -16,4 +16,5 @@ source /cvmfs/cms.cern.ch/cmsset_default.sh
 
 #python ALP_plot_param.py -y run2 -m -S #--ln #--cut --mA M30
 #python ALP_plot_param.py -y run2 -m 
-python ALP_plot_bkgCorr.py -y run2 -m
+#python ALP_plot_bkgCorr.py -y run2 -m
+python ALP_plot_param.py -y run2 -m -b #--cut --cutVal 0.5 --mA M30 -b

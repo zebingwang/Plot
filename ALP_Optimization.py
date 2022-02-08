@@ -38,6 +38,7 @@ parser.add_option("-c", "--nCats",   dest="nCats",    default=5,    type="int", 
 parser.add_option('-o', "--outDir", dest='outDir', default="./optimize", type="string", help="outDir")
 parser.add_option('-p', '--plot', dest='plot', action='store_true', default=False, help='Plot?')
 parser.add_option('-s', '--sigma', dest='sigma', action='store_true', default=False, help='mass region?')
+parser.add_option('--sigVSscore', dest='sigVSscore', action='store_true', default=False, help='mass region?')
 parser.add_option('--doOpt', dest='doOpt', action='store_true', default=False, help='whether optimize the category?')
 (options, args) = parser.parse_args()
 
@@ -221,6 +222,7 @@ def getResults(h_bdt_signal_SR, h_bdt_datamix_SR_weighted_smooth, h_bdt_data_SB,
 
     significance_final = -999.
     partition_final = []
+    sig_all = {}
 
     #1 categories
     if nCats == 1:
@@ -233,7 +235,8 @@ def getResults(h_bdt_signal_SR, h_bdt_datamix_SR_weighted_smooth, h_bdt_data_SB,
             if significance>significance_final:
                 significance_final = significance
                 partition_final = partition
-        output = nCats," - Best category: ",h_bdt_signal_SR.GetBinCenter(partition_final[0][0])-h_bdt_signal_SR.GetBinWidth(partition_final[0][0])/2,"1. --->",significance_final,"signal total: ",h_bdt_signal_SR.Integral(1,nBins+1),"signal cut",h_bdt_signal_SR.Integral(partition_final[0][0],nBins),"smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0],nBins)
+            sig_all[i] = significance
+        output = nCats," - Best category: ",h_bdt_signal_SR.GetBinCenter(partition_final[0][0])-h_bdt_signal_SR.GetBinWidth(partition_final[0][0])/2,"1. --->",significance_final,"signal total: ",h_bdt_signal_SR.Integral(1,nBins+1),"signal cut",h_bdt_signal_SR.Integral(partition_final[0][0],nBins),"smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0],nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0],nBins),"NEXT BIN: ","smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0]+1,nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0]+1,nBins)
         print ' '.join(map(str,output))
 
     #2 categories
@@ -309,7 +312,8 @@ def getResults(h_bdt_signal_SR, h_bdt_datamix_SR_weighted_smooth, h_bdt_data_SB,
         print "Number of categories not supported, choose: 1, 2, 3, 4, 5, 6, 7, 8 or 9!"
         sys.exit()
 
-    return partition_final, significance_final, output
+    
+    return partition_final, significance_final, output, sig_all
 
 
 
@@ -377,10 +381,11 @@ def main():
             partition_final = {}
             significance_final = {}
             output = {}
+            significance_all = {}
 
             for r in signal_region:
 
-                partition_final[r], significance_final[r], output[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][0], hist_CR[sig], nCats, nBins)
+                partition_final[r], significance_final[r], output[r], significance_all[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][0], hist_CR[sig], nCats, nBins)
 
                 #print "nSig: ", 
 
@@ -393,6 +398,25 @@ def main():
                 outfile.write(' '.join(map(str,output[r]))+'\n')
 
         
+        if options.sigVSscore:
+            
+            if nCats == 1:
+                
+                w = hist_signal['all']['M1'].GetBinWidth(1)
+                #print significance_all['all'].keys()
+                #print [(i-1)*w for i in significance_all['all'].keys()]
+                #print significance_all['all'].values()
+                plt.plot([(i-1)*w for i in significance_all['all'].keys()], significance_all['all'].values(), "o-")
+                plt.ylim([0.0, 100.0])
+                plt.xlim([0.5, 1.0])
+                plt.xlabel('boundary')
+                plt.ylabel('significance')
+                plt.plot([(partition_final['all'][0][0]-1)*w, (partition_final['all'][0][0]-1)*w], [0., 100], c='black', linestyle='--')
+                plt.grid()
+                plt.savefig(options.outDir+ '/sigVSscore_' + sig + '.png')
+                plt.close('all')
+
+
         #make sigma plots
         if nCats == 1:
             for l in y_list:
@@ -407,6 +431,8 @@ def main():
                 y['Nsignal'][sig].append(hist_signal['all'][sig].Integral(partition_final[r][0][0],nBins))
                 y['Nbackground'][sig].append(hist_SR_smooth['all'][sig][0].Integral(partition_final[r][0][0],nBins))
                 
+
+
 
     if options.sigma:
         for l in y_list:
@@ -424,7 +450,6 @@ def main():
             plt.legend()
             plt.savefig(options.outDir+ '/' + l + '.png')
             plt.close('all')
-
 
 
 main()

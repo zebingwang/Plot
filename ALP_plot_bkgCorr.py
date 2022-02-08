@@ -12,7 +12,7 @@ from Analyzer_Helper import MuPair, DimuCandidates, IsBtagLoose, IsBtagMed, IsBt
 import Analyzer_Configs as AC
 import Plot_Configs     as PC
 
-from Analyzer_ALP import PIso2D, plot2D, plot2D_CONT
+from Analyzer_ALP import PIso2D, plot2D_mgg, plot2D_mllgg, plot2D_CONT
 
 import CMS_lumi, tdrstyle
 
@@ -111,12 +111,18 @@ def main():
     histos = {}
     histos_sys = {}
 
+    mass_list = {'M1':1.0, 'M5':5.0, 'M15':15.0, 'M30':30.0}
     histos['mvaVal_bkg']    = TH2F('mvaVal_bkg', 'mvaVal_bkg', 35,  0., 35., 100, 0., 1)#2D
 
+    histos['mvaVal_bkg_mgg'] = {}
+    histos['mvaVal_bkg_mllgg'] = {}
+    for ALP_mass in mass_list:
+        histos['mvaVal_bkg_mgg'][ALP_mass] = TH2F('mvaVal_bkg_mgg_'+ALP_mass, 'mvaVal_bkg_mgg_'+ALP_mass, 35,  0., 35., 100, 0., 1)#2D
+        histos['mvaVal_bkg_mllgg'][ALP_mass] = TH2F('mvaVal_bkg_mllgg'+ALP_mass, 'mvaVal_bkg_mllgg'+ALP_mass, 100,  115., 180., 100, 0., 1)#2D
 
    
     ### loop over samples and events
-    mass_list = {'M1':1.0, 'M5':5.0, 'M15':15.0, 'M30':30.0}
+    
     for sample in analyzer_cfg.bkg_names:
         ntup = ntuples[sample] # just a short name
         print '\n\nOn sample: %s' %sample
@@ -162,15 +168,31 @@ def main():
 
                     for ALP_mass in mass_list:
                         histos['mvaVal_bkg'].Fill(mass_list[ALP_mass], MVA_value[ALP_mass], weight)
+                        histos['mvaVal_bkg_mgg'][ALP_mass].Fill(ntup.ALP_m, MVA_value[ALP_mass], weight)
+                        histos['mvaVal_bkg_mllgg'][ALP_mass].Fill(ntup.H_m, MVA_value[ALP_mass], weight)
 
 
         ## End of for iEvt in range( ntup.GetEntries() )
     ## End of for sample in analyzer_cfg.samp_names
 
+    gStyle.SetPalette(kGreyScale)
+    TColor.InvertPalette()
     
     canv2D = CreateCanvas("mvaVal_bkg")
-    plot2D(canv2D, histos["mvaVal_bkg"])
+    plot2D_mgg(canv2D, histos["mvaVal_bkg"])
     SaveCanvPic(canv2D, file_plot, "mvaVal_bkg")
+
+    canv2D_mgg = {}
+    canv2D_mllgg = {}
+    for ALP_mass in mass_list:
+        canv2D_mgg[ALP_mass] = CreateCanvas("mvaVal_bkg_mgg_"+ALP_mass)
+        plot2D_mgg(canv2D_mgg[ALP_mass], histos['mvaVal_bkg_mgg'][ALP_mass])
+        SaveCanvPic(canv2D_mgg[ALP_mass], file_plot, "mvaVal_bkg_mgg_"+ALP_mass)
+
+        canv2D_mllgg[ALP_mass] = CreateCanvas("mvaVal_bkg_mllgg_"+ALP_mass)
+        plot2D_mllgg(canv2D_mllgg[ALP_mass], histos['mvaVal_bkg_mllgg'][ALP_mass])
+        SaveCanvPic(canv2D_mllgg[ALP_mass], file_plot, "mvaVal_bkg_mllgg_"+ALP_mass)
+
     print histos["mvaVal_bkg"].GetCorrelationFactor()
     print '\n\n'
     #CountYield(analyzer_cfg, histos['ALP_m'])

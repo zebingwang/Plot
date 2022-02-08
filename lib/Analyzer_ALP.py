@@ -512,7 +512,7 @@ def PIso2D(canv, hitos2D_sig, hitos2D_bkg, isEB):
     l2.Draw("SAME")
 
 
-def plot2D(canv, hitos2D_sig):
+def plot2D_mgg(canv, hitos2D_sig):
 
     canv.SetBottomMargin(0.1)
     canv.cd()
@@ -539,8 +539,7 @@ def plot2D(canv, hitos2D_sig):
     TColor.CreateGradientColorTable(npoints, s, r, g, b, 50)
     gStyle.SetNumberContours(50)
     '''
-    gStyle.SetPalette(kGreyScale)
-    TColor.InvertPalette()
+    
     
     hitos2D_sig.Draw("COLZ")
     lt = TLatex();
@@ -556,6 +555,40 @@ def plot2D(canv, hitos2D_sig):
     #hitos2D_bkg.GetYaxis().SetTitleSize(0.15)
     #hitos2D_bkg.GetYaxis().SetTitleOffset(1.0)
     #hitos2D_bkg.Draw("COLZ")
+
+def plot2D_mllgg(canv, hitos2D_sig):
+
+    canv.SetBottomMargin(0.1)
+    canv.cd()
+
+    upper_pad = TPad("upperpad", "upperpad", 0.05,0.05, 0.95,0.95)
+    upper_pad.Draw()
+    upper_pad.cd()
+    hitos2D_sig.GetXaxis().SetTitle("M_{ll#gamma#gamma}")
+    hitos2D_sig.GetXaxis().SetTitleSize(0.05)
+    hitos2D_sig.GetYaxis().SetTitle("mvaVal")
+    hitos2D_sig.GetYaxis().SetTitleSize(0.05)
+    hitos2D_sig.GetYaxis().SetTitleOffset(1.0)
+    gStyle.SetOptStat(0)
+    '''
+    stops = [ 0.00, 0.50, 1.00 ]
+    red   = [ 1.00, 0.00, 0.00 ]
+    green = [ 0.00, 1.00, 0.00 ]
+    blue  = [ 0.00, 0.00, 1.00 ]
+    s = array('d', stops)
+    r = array('d', red)
+    g = array('d', green)
+    b = array('d', blue)
+    npoints = len(s)
+    TColor.CreateGradientColorTable(npoints, s, r, g, b, 50)
+    gStyle.SetNumberContours(50)
+    '''
+    
+    
+    hitos2D_sig.Draw("COLZ")
+    lt = TLatex();
+    lt.DrawLatexNDC(0.3,0.8,"Correlation: {:.3g}".format(hitos2D_sig.GetCorrelationFactor()))
+
 
 def plot2D_CONT(canv, hitos2D_sig, hitos2D_bkg):
 

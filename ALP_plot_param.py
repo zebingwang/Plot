@@ -12,7 +12,7 @@ from Analyzer_Helper import MuPair, DimuCandidates, IsBtagLoose, IsBtagMed, IsBt
 import Analyzer_Configs as AC
 import Plot_Configs     as PC
 
-from Analyzer_ALP import PIso2D, plot2D, plot2D_CONT
+from Analyzer_ALP import PIso2D
 
 import CMS_lumi, tdrstyle
 
@@ -27,9 +27,11 @@ parser.add_argument('-C', '--CR', dest='CR', action='store_true', default=False,
 parser.add_argument('-S', '--SR', dest='SR', action='store_true', default=False, help='make signal region')
 parser.add_argument('-m', '--mva', dest='mva', action='store_true', default=False, help='use mva or not')
 parser.add_argument('--cut', dest='cut', action='store_true', default=False, help='apply mva')
+parser.add_argument("--cutVal", dest="cutVal", type=float, default=0.0, help="mva cut value")
 parser.add_argument("--mA", dest="mA", default="M5", help="ALP mass")
 parser.add_argument('-b', '--blind', dest='blind', action='store_true', default=False, help='Blind signal region')
 parser.add_argument('-ln', '--ln', dest='ln', action='store_true', default=False, help='log plot?')
+parser.add_argument('--ele', dest='ele', action='store_true', default=False, help='electron channel?')
 args = parser.parse_args()
 
 mass = 'param'
@@ -49,7 +51,13 @@ elif mva:
 else:
     name = mass
 
-if args.cut: name = name + '_cut_' + args.mA
+if args.cut: name = name + '_cut_' + str(args.cutVal) + '_' + args.mA
+'''
+if args.ele:
+    name = name + '_ele'
+else:
+    name = name + '_mu'
+'''
 
 if args.year == '2016':
     file_out = 'plots_16'
@@ -156,7 +164,7 @@ def main():
         histos['pho2IetaIeta55'][sample]    = TH1F('pho2IetaIeta55'    + '_' + sample, 'pho2IetaIeta55'    + '_' + sample, 50,  0., 0.07)
         histos['pho2PIso_noCorr'][sample]    = TH1F('pho2PIso_noCorr'    + '_' + sample, 'pho2PIso_noCorr'    + '_' + sample, 50, 0., 40.)
         histos['Z_m'][sample]    = TH1F('Z_m'    + '_' + sample, 'Z_m'    + '_' + sample, 50,  50., 130.)
-        histos['H_m'][sample]    = TH1F('H_m'    + '_' + sample, 'H_m'    + '_' + sample, 25,  110., 180.)
+        histos['H_m'][sample]    = TH1F('H_m'    + '_' + sample, 'H_m'    + '_' + sample, 28,  110., 180.)
         histos['H_pt'][sample]    = TH1F('H_pt'    + '_' + sample, 'H_pt'    + '_' + sample, 50,  0., 200.)
         histos['ALP_m'][sample] = TH1F('ALP_m' + '_' + sample, 'ALP_m' + '_' + sample, 25, 0., 40.)
         histos['var_dR_g1g2'][sample] = TH1F('var_dR_g1g2' + '_' + sample, 'var_dR_g1g2' + '_' + sample, 25, 0., 5)
@@ -204,6 +212,14 @@ def main():
             if (iEvt % 100000 == 1):
                 print "looking at event %d" %iEvt
 
+            '''
+            if args.ele:
+                if abs(ntup.l1_id) == 13: 
+                    continue
+            else:
+                if abs(ntup.l1_id) == 11: 
+                    continue
+            '''
 
             weight = ntup.factor * ntup.pho1SFs_dR0P15 * ntup.pho1SFs_dR0P15
 
@@ -237,11 +253,12 @@ def main():
 
 
                     if args.cut:
-                        if MVA_value[args.mA] < mvaCut[args.mA]: continue
+                        #if MVA_value[args.mA] < mvaCut[args.mA]: continue
+                        if MVA_value[args.mA] < args.cutVal: continue
 
                     for ALP_mass in mass_list:
                         if args.blind:
-                            if sample == 'data' and ntup.passBDT > 0.5:
+                            if sample == 'data' and MVA_value[args.mA] > mvaCut[args.mA]:
                                 continue
                             else:
                                 histos['mvaVal_'+ALP_mass][sample].Fill( MVA_value[ALP_mass], weight )
@@ -272,8 +289,11 @@ def main():
                 histos['pho2IetaIeta55'][sample].Fill( ntup.pho2IetaIeta55, weight )
                 histos['pho2PIso_noCorr'][sample].Fill( ntup.pho2PIso_noCorr, weight )
 
-
-                histos['H_m'][sample].Fill( ntup.H_m, weight )
+                if args.blind:
+                    if not (sample == 'data' and (ntup.H_m<135. and ntup.H_m>115.)): 
+                        histos['H_m'][sample].Fill( ntup.H_m, weight )
+                else:        
+                    histos['H_m'][sample].Fill( ntup.H_m, weight )
                 histos['H_pt'][sample].Fill( ntup.H_pt, weight )
                 histos['ALP_m'][sample].Fill( ntup.ALP_m, weight )
                 histos['Z_m'][sample].Fill( ntup.Z_m, weight )
