@@ -10,21 +10,25 @@ cmsText     = "CMS";
 cmsTextFont   = 61
 
 writeExtraText = True
-#extraText   = "Preliminary"
-extraText   = "Private"
+extraText   = "Preliminary"
+#extraText   = "Private"
 extraTextFont = 52
 
 lumiTextSize     = 0.85
 lumiTextOffset   = 0.2
+lumiText_posX = 0.07
+lumiText_posY = 0.015
 
 cmsTextSize      = 0.75
 cmsTextOffset    = 0.1
+CMSText_posX = 0.1
 
 relPosX    = 0.045
 relPosY    = 0.035
 relExtraDY = 1.2
 
 extraOverCmsTextSize  = 0.76
+extraText_posX = 0.07
 
 lumi_14TeV = "3000 fb^{-1}"
 lumi_13TeV = "35.9 fb^{-1}"
@@ -37,13 +41,15 @@ outOfFrame    = False
 
 def CMS_lumi(pad,  iPeriod,  iPosX, year ):
     if year == '2016':
-        lumi_sqrtS = "35.9 fb^{-1}"
+        lumi_sqrtS = "16.81 fb^{-1}"
+    elif year == '-2016':
+        lumi_sqrtS = "19.52 fb^{-1}"
     elif year == '2017':
-        lumi_sqrtS = "41.5 fb^{-1}"
+        lumi_sqrtS = "41.48 fb^{-1}"
     elif year == '2018':
-        lumi_sqrtS = "56.9 fb^{-1}"
+        lumi_sqrtS = "59.83 fb^{-1}"
     elif year == 'run2':
-        lumi_sqrtS = "134.3 fb^{-1}"
+        lumi_sqrtS = "138 fb^{-1}"
     else:
         print "do not include at 2016/2017/2018"
         exit(0)
@@ -61,7 +67,7 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
 
     H = pad.GetWh()
     W = pad.GetWw()
-    l = pad.GetLeftMargin()
+    l = pad.GetLeftMargin()-0.03
     t = pad.GetTopMargin()
     r = pad.GetRightMargin()
     b = pad.GetBottomMargin()
@@ -112,6 +118,8 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
         if( outOfFrame): lumiText += "}"
     elif ( iPeriod==0 ):
         lumiText += lumi_sqrtS
+    elif ( iPeriod==5 ):
+        lumiText += "13 TeV"
 
     print lumiText
 
@@ -126,13 +134,13 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
     latex.SetTextAlign(31)
     latex.SetTextSize(lumiTextSize*t)
 
-    latex.DrawLatex(1-r,1-t+lumiTextOffset*t,lumiText)
+    latex.DrawLatex(1-r-lumiText_posX,1-t+lumiTextOffset*t-lumiText_posY,lumiText)
 
     if( outOfFrame ):
         latex.SetTextFont(cmsTextFont)
         latex.SetTextAlign(11)
         latex.SetTextSize(cmsTextSize*t)
-        latex.DrawLatex(l,1-t+lumiTextOffset*t,cmsText)
+        latex.DrawLatex(l-CMSText_posX,1-t+lumiTextOffset*t-lumiText_posY,cmsText)
 
     pad.cd()
 
@@ -173,12 +181,12 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
                 latex.DrawLatex(posX_, posY_- relExtraDY*cmsTextSize*t, extraText)
     elif( writeExtraText ):
         if( iPosX==0):
-            posX_ =   l +  relPosX*(1-l-r)
-            posY_ =   1-t+lumiTextOffset*t
+            posX_ =   l +  relPosX*(1-l-r)+extraText_posX
+            posY_ =   1-t+lumiTextOffset*t-lumiText_posY
 
         latex.SetTextFont(extraTextFont)
         latex.SetTextSize(extraTextSize*t)
         latex.SetTextAlign(align_)
-        latex.DrawLatex(posX_, posY_, extraText)
+        latex.DrawLatex(posX_-CMSText_posX, posY_, extraText)
 
     pad.Update()

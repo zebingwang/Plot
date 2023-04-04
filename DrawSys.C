@@ -29,7 +29,8 @@ const TString TreeName = "passedEvents";//bing
 const TString PrintInfor1="#bf{CMS} #it{} #it{Preliminary}";
 //const TString PrintInfor2="12.9 fb^{-1} (13TeV)";
 //const TString PrintInfor2="35.9 fb^{-1} (13TeV)"; //"2017 data (13TeV)"; //"35.9 fb^{-1} (13TeV)";
-const TString PrintInfor2="41.5 fb^{-1} (13TeV)";
+//const TString PrintInfor2="41.5 fb^{-1} (13TeV)";
+const TString PrintInfor2="138 fb^{-1} (13TeV)";
 //const double MCXSweight =  6025.2*2136.361*1.0/28747969;
 // const double MCXSweight =  6025.2*2488.*1.0/28747969;
 //const double MCXSweight =  6025.2*2534.565*1.0/28747969;
@@ -61,8 +62,8 @@ void DrawMyPlots(string Object, string Selections,  string XTitle, string YUnit,
   //Data_Tree->Add("./data2016_all_all.root");
   //MC_Tree->Add("./DY_all_all.root");
 
-  Data_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/17/massInde/ALP_data.root");//bing
-  MC_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/17/massInde/ALP_DYJetsToLL.root");//bing
+  Data_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/UL/run2/ALP_data.root");//bing
+  MC_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/UL/run2/ALP_DYJetsToLL.root");//bing
 
   //Data_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/18/massInde/ALP_data.root");//bing
   //MC_Tree->Add("/publicfs/cms/user/wangzebing/ALP/Analysis_out/18/massInde/ALP_DYJetsToLL.root");//bing
@@ -192,7 +193,7 @@ void DrawMyPlots(string Object, string Selections,  string XTitle, string YUnit,
   minY = min(minY, h_MCUP->GetMinimum());
   minY = min(minY, h_MCDN->GetMinimum());
   //h_data->SetMaximum(1.2*maxY);
-  if(IfLogY==1) h_data->GetYaxis()->SetRangeUser(0.01, 1.5*maxY);
+  if(IfLogY==1) h_data->GetYaxis()->SetRangeUser(1.0, 1.5*maxY);
 
   h_data->SetLineColor(1);
   h_data->SetFillColor(0);
@@ -483,8 +484,18 @@ string Preselections25= PrePreselections25 + MorePreselections;
   //DrawMyPlots("var_MhMZ",selection, "var_MhMZ", "", "var_MhMZ_2017", 50, 120., 600., 0.1, 0, 0, 0);
   //DrawMyPlots("H_pt",selection, "H_pt", "", "H_pt_2017", 50, 0., 200., 0.1, 0, 0, 0);
 
-  string selection = "factor*pho1SFs*pho2SFs*(passChaHadIso && passNeuHadIso && passHOverE && passdR_gl && (!passH_m))";
-  DrawMyPlots("Val_BDT",selection, "Val_BDT", "", "Val_BDT_2017", 50, 0., 1.0, 0.05, 0, 0, 0);
+  string selection = "factor*pho1SFs*pho2SFs*(passChaHadIso && (!passNeuHadIso) && passHOverE && passdR_gl && H_m>95 && H_m<180)";
+  //DrawMyPlots("Val_BDT",selection, "Val_BDT", "", "Val_BDT_2017", 50, 0., 1.0, 0.05, 0, 0, 0);
+  //DrawMyPlots("pho2R9",selection, "pho2R9", "", "pho2R9_2018UL", 50, 0., 1.1, 0.01, 1, 0, 0);
+  //DrawMyPlots("pho1R9",selection, "pho1R9", "", "pho1R9_UL", 50, 0., 1.1, 0.005, 1, 0, 0);
+  //DrawMyPlots("pho1IetaIeta55",selection, "pho1IetaIeta55", "", "pho1IetaIeta55_UL", 50, 0., 0.07, 0.01, 0, 0, 0);
+  //DrawMyPlots("pho1PIso_noCorr",selection, "pho1PIso_noCorr", "", "pho1PIso_noCorr_UL", 50, 0., 40.0, 0.01, 0, 1, 0);
+
+  //DrawMyPlots("pho2R9",selection, "pho2R9", "", "pho2R9_UL", 50, 0., 1.1, 0.005, 1, 0, 0);
+  //DrawMyPlots("pho2IetaIeta55",selection, "pho2IetaIeta55", "", "pho2IetaIeta55_UL", 50, 0., 0.07, 0.02, 0, 0, 0);
+  //DrawMyPlots("pho2PIso_noCorr",selection, "pho2PIso_noCorr", "", "pho2Iso_noCorr_UL", 50, 0., 40.0, 0.01, 0, 1, 0);
+
+  DrawMyPlots("ALP_calculatedPhotonIso",selection, "ALP_calculatedPhotonIso", "", "ALP_calculatedPhotonIso_UL", 50, 0., 5, 0.05, 0, 1, 0);
 
   // #############2018
   //DrawMyPlots("pho1Pt",selection, "pho1Pt", "", "pho1Pt_2018", 50, 5., 50., 0.1, 0, 0, 0);

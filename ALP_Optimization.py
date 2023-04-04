@@ -40,9 +40,11 @@ parser.add_option('-p', '--plot', dest='plot', action='store_true', default=Fals
 parser.add_option('-s', '--sigma', dest='sigma', action='store_true', default=False, help='mass region?')
 parser.add_option('--sigVSscore', dest='sigVSscore', action='store_true', default=False, help='mass region?')
 parser.add_option('--doOpt', dest='doOpt', action='store_true', default=False, help='whether optimize the category?')
+parser.add_option('--ele', dest='ele', action='store_true', default=False, help='electron channel?')
+parser.add_option('--mu', dest='mu', action='store_true', default=False, help='muon channel?')
 (options, args) = parser.parse_args()
 
-mass = 'param'
+
 
 gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
@@ -61,12 +63,74 @@ elif options.year == '2018':
     name_SR = "ALP_plot_data18_param_SR.root"
     name_CR = "ALP_plot_data18_param_CR.root"
 elif options.year == 'run2':
-    file_out = 'plots_run2'
-    name_SR = "ALP_plot_run2_param_SR.root"
-    name_CR = "ALP_plot_run2_param_CR.root"
+    file_out = 'plots_run2UL'
+    if options.ele:
+        name_SR = "ALP_plot_run2_UL_SR_ele.root"
+        name_CR = "ALP_plot_run2_UL_CR_ele.root"
+    elif options.mu:
+        name_SR = "ALP_plot_run2_UL_SR_mu.root"
+        name_CR = "ALP_plot_run2_UL_CR_mu.root"
+    else:
+        name_SR = "ALP_plot_run2_UL_SR.root"
+        name_CR = "ALP_plot_run2_UL_CR.root"
+
+        #name_SR = "ALP_plot_run2_UL_onlyM10_SR.root"
+        #name_CR = "ALP_plot_run2_UL_onlyM10_CR.root"
+        
+        #name_SR = "ALP_plot_run2_UL_Ns_10_SR.root"
+        #name_CR = "ALP_plot_run2_UL_Ns_10_CR.root"
+    
 else:
     print "do not include at 2016/2017/2018"
     exit(0)
+
+
+def SetgStyle():
+
+    gStyle.SetFrameFillColor(0)
+    gStyle.SetStatColor(0)
+    gStyle.SetOptStat(0)
+    gStyle.SetTitleFillColor(0)
+    gStyle.SetCanvasBorderMode(0)
+    gStyle.SetPadBorderMode(0)
+    gStyle.SetFrameBorderMode(0)
+    gStyle.SetPadColor(kWhite)
+    gStyle.SetCanvasColor(kWhite)
+    
+    
+    gStyle.SetCanvasDefH(600) #Height of canvas
+    gStyle.SetCanvasDefW(600) #Width of canvas
+    gStyle.SetCanvasDefX(0)   #POsition on screen
+    gStyle.SetCanvasDefY(0)
+
+    
+    gStyle.SetPadLeftMargin(0.13)
+    gStyle.SetPadRightMargin(0.05)
+    gStyle.SetPadTopMargin(0.085)
+    gStyle.SetPadBottomMargin(0.12)
+    
+    # For hgg axis titles:
+    gStyle.SetTitleColor(1, "XYZ")
+    gStyle.SetTitleFont(42, "XYZ")
+    gStyle.SetTitleSize(0.04, "XYZ")
+    gStyle.SetTitleXOffset(0.95)#//0.9)
+    gStyle.SetTitleYOffset(1.15)# // => 1.15 if exponents
+    
+    # For hgg axis labels:
+    gStyle.SetLabelColor(1, "XYZ")
+    gStyle.SetLabelFont(42, "XYZ")
+    gStyle.SetLabelOffset(0.007, "XYZ")
+    gStyle.SetLabelSize(0.04, "XYZ")
+    
+    # Legends
+    gStyle.SetLegendBorderSize(0)
+    gStyle.SetLegendFillColor(kWhite)
+    gStyle.SetLegendFont(42)
+    
+    gStyle.SetFillColor(10)
+    # Nothing for now
+    gStyle.SetTextFont(42)
+    gStyle.SetTextSize(0.03)
 
 
 def open_file(file_name):
@@ -141,10 +205,17 @@ def smooth(graph, hist, mva_low = 0.1):
 
     return [h_smooth, h_smooth_up, h_smooth_dn]
 
-def compare(hist, hist_smooth):
-    canv = TCanvas("cc", "cc", 200,10,600,400)
+def compare(hist, hist_smooth, ma):
+    canv = TCanvas("cc", "cc", 650, 600)
     canv.cd()
     canv.SetLogy()
+    SetgStyle()
+    '''
+    canv.SetRightMargin(0.1)
+    canv.SetLeftMargin(0.13)
+    canv.SetTopMargin(0.085)
+    canv.SetBottomMargin(0.12)
+    '''
 
     hist.SetMinimum(1e-1)
     hist.SetMaximum(1e4)
@@ -152,8 +223,25 @@ def compare(hist, hist_smooth):
     hist_smooth[0].SetMaximum(1e4)
 
     hist.SetFillColor(10)
-    hist.GetXaxis().SetTitle('mvaVal')
-    hist.GetYaxis().SetTitle('Events / (%.2f GeV)' %hist.GetBinWidth(1))
+    hist.GetXaxis().SetTitle('BDT Output')
+    hist.GetYaxis().SetTitle('Events')
+
+    hist.GetYaxis().SetLabelSize(0.04)
+    hist.GetYaxis().SetLabelColor(1)
+    hist.GetYaxis().SetLabelFont(42)
+    hist.GetYaxis().SetLabelOffset(0.007)
+    hist.GetYaxis().SetTitleColor(1)
+    hist.GetYaxis().SetTitleFont(42)
+    hist.GetYaxis().SetTitleSize(0.05)
+
+    hist.GetXaxis().SetLabelSize(0.04)
+    hist.GetXaxis().SetLabelColor(1)
+    hist.GetXaxis().SetLabelFont(42)
+    hist.GetXaxis().SetLabelOffset(0.007)
+    hist.GetXaxis().SetTitleColor(1)
+    hist.GetXaxis().SetTitleFont(42)
+    hist.GetXaxis().SetTitleSize(0.05)
+
 
     hist.Draw("HIST")
 
@@ -173,12 +261,22 @@ def compare(hist, hist_smooth):
 
     #canv.cd()
     global legend
-    legend = TLegend(0.7,0.8,0.95,0.92)
+    legend = TLegend(0.6,0.65,0.88,0.88)
     #legend.AddEntry(hist, "Background")
-    legend.AddEntry(hist_smooth[1], "Smoothing + 1#sigma")
-    legend.AddEntry(hist_smooth[0], "Smoothing")
-    legend.AddEntry(hist_smooth[2], "Smoothing - 1#sigma")
+    legend.AddEntry(hist_smooth[1], "Smoothing + 1#sigma", "l")
+    legend.AddEntry(hist_smooth[0], "Smoothing", "l")
+    legend.AddEntry(hist_smooth[2], "Smoothing - 1#sigma", "l")
     legend.Draw("SAME")
+
+    latex = TLatex()
+    latex.SetNDC()
+    latex.SetTextColor(kBlack)
+    latex.SetTextFont(42)
+    latex.SetTextSize(0.042)
+    latex.SetTextAlign(31)
+    latex.DrawLatex(0.45,0.8, r"m_{a} = %s GeV" % (ma.lstrip("M")))
+
+
     canv.Update()
     #print legend
 
@@ -194,7 +292,7 @@ def compare(hist, hist_smooth):
 def GetHist(file, var):
 
     hist = get_hist(file, var)
-        
+    
     graph = hist2graph(hist, 0.01)
     hist_smooth = smooth(graph, hist, 0.01)
 
@@ -236,7 +334,7 @@ def getResults(h_bdt_signal_SR, h_bdt_datamix_SR_weighted_smooth, h_bdt_data_SB,
                 significance_final = significance
                 partition_final = partition
             sig_all[i] = significance
-        output = nCats," - Best category: ",h_bdt_signal_SR.GetBinCenter(partition_final[0][0])-h_bdt_signal_SR.GetBinWidth(partition_final[0][0])/2,"1. --->",significance_final,"signal total: ",h_bdt_signal_SR.Integral(1,nBins+1),"signal cut",h_bdt_signal_SR.Integral(partition_final[0][0],nBins),"smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0],nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0],nBins),"NEXT BIN: ","smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0]+1,nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0]+1,nBins)
+        output = nCats," - Best category: ",h_bdt_signal_SR.GetBinCenter(partition_final[0][0])-h_bdt_signal_SR.GetBinWidth(partition_final[0][0])/2,"1. --->",significance_final,"signal total: ",h_bdt_signal_SR.Integral(1,nBins+1),"events:",h_bdt_signal_SR.GetEntries(),"signal cut",h_bdt_signal_SR.Integral(partition_final[0][0],nBins),"smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0],nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0],nBins),"NEXT BIN: ","smoothed background: ",h_bdt_datamix_SR_weighted_smooth.Integral(partition_final[0][0]+1,nBins),"data: ",h_bdt_data_SB.Integral(partition_final[0][0]+1,nBins)
         print ' '.join(map(str,output))
 
     #2 categories
@@ -320,13 +418,14 @@ def getResults(h_bdt_signal_SR, h_bdt_datamix_SR_weighted_smooth, h_bdt_data_SB,
 def main():
 
     #analyzer_cfg.sig_names
-    analyzer_cfg = AC.Analyzer_Config('inclusive', mass,options.year)
+    analyzer_cfg = AC.Analyzer_Config('inclusive',options.year)
 
     file = {}
     file['SR'] = open_file(file_out + '/' + name_SR)
     file['CR'] = open_file(file_out + '/' + name_CR)
 
-    signal_region = ['all', '1sigma', '1P5sigma', '2sigma', '3sigma']
+
+    signal_region = ['1sigma', '1P5sigma', '2sigma', '3sigma','all']
     hist_SR = {}
     hist_SR_smooth = {}
 
@@ -367,10 +466,10 @@ def main():
 
         if options.plot:
             for r in signal_region:
-                canv_SR = compare(hist_SR[r][sig], hist_SR_smooth[r][sig])
+                canv_SR = compare(hist_SR[r][sig], hist_SR_smooth[r][sig],sig)
                 canv_SR.SaveAs(options.outDir+"/"+sig+"_"+r+"_DYJetsToLL_SR.png")
 
-            canv_CR = compare(hist_CR[sig], hist_CR_smooth[sig])
+            canv_CR = compare(hist_CR[sig], hist_CR_smooth[sig],sig)
             canv_CR.SaveAs(options.outDir+"/"+sig+"_data_CR.png")
 
         if options.doOpt:
@@ -383,9 +482,22 @@ def main():
             output = {}
             significance_all = {}
 
+            partition_final_up = {}
+            significance_final_up = {}
+            output_up = {}
+            significance_all_up = {}
+            partition_final_dn = {}
+            significance_final_dn = {}
+            output_dn = {}
+            significance_all_dn = {}
+
             for r in signal_region:
 
                 partition_final[r], significance_final[r], output[r], significance_all[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][0], hist_CR[sig], nCats, nBins)
+                partition_final_up[r], significance_final_up[r], output_up[r], significance_all_up[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][1], hist_CR[sig], nCats, nBins)
+                partition_final_dn[r], significance_final_dn[r], output_dn[r], significance_all_dn[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][2], hist_CR[sig], nCats, nBins)
+                #partition_final[r], significance_final[r], output[r], significance_all[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][1], hist_CR[sig], nCats, nBins)
+                #partition_final[r], significance_final[r], output[r], significance_all[r] = getResults(hist_signal[r][sig], hist_SR_smooth[r][sig][2], hist_CR[sig], nCats, nBins)
 
                 #print "nSig: ", 
 
@@ -397,25 +509,83 @@ def main():
                 outfile = open(out_file_name, 'a')
                 outfile.write(' '.join(map(str,output[r]))+'\n')
 
+                outfile_up = open(options.outDir + '/categorize_' + r + '_' + sig + '_up.txt', 'a')
+                outfile_up.write(' '.join(map(str,output_up[r]))+'\n')
+
+                outfile_dn = open(options.outDir + '/categorize_' + r + '_' + sig + '_dn.txt', 'a')
+                outfile_dn.write(' '.join(map(str,output_dn[r]))+'\n')
+
         
         if options.sigVSscore:
             
             if nCats == 1:
                 
                 w = hist_signal['all']['M1'].GetBinWidth(1)
-                #print significance_all['all'].keys()
-                #print [(i-1)*w for i in significance_all['all'].keys()]
-                #print significance_all['all'].values()
-                plt.plot([(i-1)*w for i in significance_all['all'].keys()], significance_all['all'].values(), "o-")
-                plt.ylim([0.0, 100.0])
+                '''
+                plt.plot([(i-1)*w for i in significance_all['all'].keys()], significance_all['all'].values(), "o-", markersize=2., label='Significance')
+                #plt.plot([(i-1)*w for i in significance_all['all'].keys()], significance_all_up['all'].values(), "o-", c='red')
+                #plt.plot([(i-1)*w for i in significance_all['all'].keys()], significance_all_dn['all'].values(), "o-", c='green')
+                plt.fill_between([(i-1)*w for i in significance_all['all'].keys()], significance_all_up['all'].values(), significance_all_dn['all'].values(), alpha=0.2, color='red',label=r'Significance$\pm 1\sigma$')
+                plt.ylim([0.0, 150.0])
                 plt.xlim([0.5, 1.0])
-                plt.xlabel('boundary')
+                plt.xlabel('boundary_'+sig)
                 plt.ylabel('significance')
-                plt.plot([(partition_final['all'][0][0]-1)*w, (partition_final['all'][0][0]-1)*w], [0., 100], c='black', linestyle='--')
+                plt.legend(loc='best')
+                plt.plot([(partition_final['all'][0][0]-1)*w, (partition_final['all'][0][0]-1)*w], [0., 150], c='black', linestyle='--')
                 plt.grid()
                 plt.savefig(options.outDir+ '/sigVSscore_' + sig + '.png')
                 plt.close('all')
+                '''
 
+                canv_sigVSscore = TCanvas("cc1", "cc1", 650, 600)
+                canv_sigVSscore.cd()
+                
+
+                num_arr = len(significance_all['all'].values())
+                x_arr = array('d')
+                y_arr = array('d')
+                y_arr_err = array('d')
+                for i in significance_all['all'].keys():
+                    x_arr.append((i-1)*w)
+                    y_arr.append(significance_all['all'][i])
+                gr = TGraph( num_arr, x_arr, y_arr)
+                gr_err = TGraph( 2 * num_arr)
+
+                for i in range(num_arr):
+                    gr_err.SetPoint(i, x_arr[i], significance_all_up['all'].values()[i])
+                    gr_err.SetPoint(2*num_arr-1-i, x_arr[i], significance_all_dn['all'].values()[i])
+                
+                gr_err.SetFillColorAlpha(2,0.3)
+                gr_err.GetHistogram().SetMaximum(100.0)
+                gr_err.GetHistogram().SetMinimum(0.0)
+                gr_err.GetYaxis().SetTitle( 'Significance (AMS)' )
+                gr_err.GetXaxis().SetTitle( 'BDT select boundary' )
+                gr_err.GetYaxis().SetLabelSize(0.04)
+                gr_err.GetYaxis().SetLabelColor(1)
+                gr_err.GetYaxis().SetLabelFont(42)
+                gr_err.GetYaxis().SetLabelOffset(0.007)
+                gr_err.GetYaxis().SetTitleColor(1)
+                gr_err.GetYaxis().SetTitleFont(42)
+                gr_err.GetYaxis().SetTitleSize(0.05)
+
+                gr_err.GetXaxis().SetLabelSize(0.04)
+                gr_err.GetXaxis().SetLabelColor(1)
+                gr_err.GetXaxis().SetLabelFont(42)
+                gr_err.GetXaxis().SetLabelOffset(0.007)
+                gr_err.GetXaxis().SetTitleColor(1)
+                gr_err.GetXaxis().SetTitleFont(42)
+                gr_err.GetXaxis().SetTitleSize(0.05)
+
+                SetgStyle()
+                gr.SetMarkerSize(0.5)
+
+                gr_err.Draw('AF')
+                gr.Draw('LP')
+                Line = TLine((partition_final['all'][0][0]-1)*w, 0, (partition_final['all'][0][0]-1)*w, 100)
+                #SetLineStyle
+                Line.Draw("SAME")
+
+                canv_sigVSscore.SaveAs(options.outDir+ '/sigVSscore_' + sig + '.png')
 
         #make sigma plots
         if nCats == 1:
@@ -423,20 +593,30 @@ def main():
                 y[l][sig] = []
             for r in signal_region:
                 
-                y['boundary'][sig].append(hist_signal[r][sig].GetBinCenter(partition_final[r][0][0])-hist_signal[r][sig].GetBinWidth(partition_final[r][0][0])/2)
-                #y['significance'][sig].append(significance_final[r])
                 s = 2*hist_signal['all'][sig].Integral(partition_final[r][0][0],nBins)
                 b = hist_SR_smooth['all'][sig][0].Integral(partition_final[r][0][0],nBins)
-                y['significance'][sig].append(np.sqrt((2*(s+b)*math.log(1+(s/b))) - 2*s))
-                y['Nsignal'][sig].append(hist_signal['all'][sig].Integral(partition_final[r][0][0],nBins))
-                y['Nbackground'][sig].append(hist_SR_smooth['all'][sig][0].Integral(partition_final[r][0][0],nBins))
-                
+
+                if b > 0.0:
+                    y['boundary'][sig].append(hist_signal[r][sig].GetBinCenter(partition_final[r][0][0])-hist_signal[r][sig].GetBinWidth(partition_final[r][0][0])/2)
+                    #y['significance'][sig].append(significance_final[r])
+
+                    y['significance'][sig].append(np.sqrt((2*(s+b)*math.log(1+(s/b))) - 2*s))
+                    y['Nsignal'][sig].append(hist_signal['all'][sig].Integral(partition_final[r][0][0],nBins))
+                    y['Nbackground'][sig].append(hist_SR_smooth['all'][sig][0].Integral(partition_final[r][0][0],nBins))
+                else:
+                    b = hist_SR_smooth['all'][sig][0].Integral(partition_final['all'][0][0],nBins)
+
+                    y['boundary'][sig].append(hist_signal['all'][sig].GetBinCenter(partition_final['all'][0][0])-hist_signal['all'][sig].GetBinWidth(partition_final['all'][0][0])/2)
+
+                    y['significance'][sig].append(np.sqrt((2*(s+b)*math.log(1+(s/b))) - 2*s))
+                    y['Nsignal'][sig].append(hist_signal['all'][sig].Integral(partition_final['all'][0][0],nBins))
+                    y['Nbackground'][sig].append(hist_SR_smooth['all'][sig][0].Integral(partition_final['all'][0][0],nBins))
 
 
 
-    if options.sigma:
+    if options.sigma and nCats == 1:
         for l in y_list:
-            colors = ['red','orange','blue','purple','darkturquoise']
+            colors = ['red','orange','blue','purple','darkturquoise', 'yellow', 'pink', 'green', 'black', 'gray', 'violet', 'gold', 'cyan', 'brown']
 
             plt.xlabel('signal mass region')
             plt.ylabel(l)

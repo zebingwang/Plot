@@ -42,28 +42,15 @@ def getVariableHistsEventsNumber_weight(Tree,varName,sample,cut):
 
     return Hist.Integral()
 
-def CountCutFlow(ana_cfg, lumi, outPath):
+def CountCutFlow(ana_cfg, lumi, outPath, version):
 
-    if ana_cfg.mass == 'M1':
-        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "\\Delta R(\\gamma\\gamma)<0.15", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
-        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho<0.15", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
-    elif ana_cfg.mass == 'M5':
-        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.1\\leqs\\Delta R(\\gamma\\gamma)<0.5", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
-        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>0.1&&dR_pho<0.5", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
-    elif ana_cfg.mass == 'M15':
-        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "0.2\\leqs\\Delta R(\\gamma\\gamma)<2", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
-        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>0.2&&dR_pho<2.0", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
-    elif ana_cfg.mass == 'M30':
-        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "find photon (at least 2 photons pt \\ge 10GeV)", "photon eta (\\vert\\eta|<1.4442 \\cup 1.566<|\\eta|<2.5)", "conversion veto", "charge Iso", "neutral Iso", "\\Delta R(l,\\gamma)>0.4", "1.0\\leqs\\Delta R(\\gamma\\gamma)<3.2", "HOverE", "sigmaIetaIeta", "photon Iso", "100\\leqslant m_{H}\\leqslant 180"]
-        varName=["H_twopho>0.","Z_Ceta>-90","Z_pho_veto>-90", "passChaHadIso", "passNeuHadIso","passdR_gl","dR_pho>1.0&&dR_pho<3.2", "passHOverE", "passIeIe", "passPhoIso","passH_m"]
-    else:
-        cutName = ["total Number of events", "HLT", "all", "isolation", "lep tight", "m_{ll} > 50GeV", "conversion veto", "charge Iso", "neutral Iso","HOverE", "\\Delta R(l,\\gamma)>0.4","118\\leqslant m_{H}\\leqslant 130"]
-        varName=["passEleVeto", "passChaHadIso", "passNeuHadIso","passHOverE","passdR_gl","passH_m"]
+    cutName = ["total Number of events", "HLT", "2 leptons", "isolation", "lep tight", "m_{ll} > 50GeV", "2 photons", "charge Iso", "neutral Iso","HOverE", "\\Delta R(l,\\gamma)>0.4","110 \\leq m_{H} \\leq 180","mva","trigger"]
+    varName=["1", "passChaHadIso", "passNeuHadIso","passHOverE","passdR_gl","(H_m>110&&H_m<180)","passBDT","event_passedTrig"]
 
-    outTable = open(outPath + 'cutFlowTable_'+ ana_cfg.mass + '.txt',"w")
+    outTable = open(outPath + 'cutFlowTable_'+ version + '.txt',"w")
     outTable.write("\\begin{landscape}\n")
     outTable.write("\\renewcommand{\\arraystretch}{1.5}\n")
-    outTable.write("\\begin{table}[tp]\n")
+    outTable.write("\\begin{sidewaystable}[tp]\n")
     outTable.write("\\centering\n")
     outTable.write("\\fontsize{6.5}{8}\\selectfont\n")
 
@@ -85,21 +72,31 @@ def CountCutFlow(ana_cfg, lumi, outPath):
 
         Ncolum = Ncolum + "c|"
         name_line = name_line + "&" + sample
-        #weight_line = weight_line + "&" +
+    
 
         ntuples.GetEvent(1)
-        line_weight = line_weight + "&" + str(ntuples.event_weight)
-        weight[sample] = ntuples.event_weight
+        if sample == 'DYJetsToLL':
+            xs_value = 6435.0
+        elif sample == 'data':
+            xs_value = 1.0
+        else:
+            xs_value = 0.1
+        
+        if sample == 'data':
+            weight_value = 1.0
+        else:
+            weight_value = xs_value*float(lumi)*1000.0/float(files.nEvents_ntuple.GetEntries())
+        line_weight = line_weight + "&" + str(weight_value)
+        weight[sample] = weight_value
 
         value[sample] = {}
         value_weight[sample] = {}
+            
+        
+        line_xs = line_xs + "&" + str(xs_value)
 
-        if sample == 'DYJetsToLL':
-            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1)/(files.Events_weight.GetBinContent(1)/weight[sample]))
-        else:
-            line_xs = line_xs + "&" + str(files.cross_section.GetBinContent(1))
-
-        value[sample][cutName[0]] = files.nEvents_ntuple.GetEntries()
+        #value[sample][cutName[0]] = files.nEvents_ntuple.GetEntries()
+        value[sample][cutName[0]] = files.nEvents_total.GetBinContent(1)
         value[sample][cutName[1]] = files.nEvents_trig.GetEntries()
         value[sample][cutName[2]] = files.Z_e_nocut.GetEntries() + files.Z_mu_nocut.GetEntries()
         value[sample][cutName[3]] = files.Z_e_lIso.GetEntries() + files.Z_mu_lIso.GetEntries()
@@ -112,10 +109,10 @@ def CountCutFlow(ana_cfg, lumi, outPath):
         for i in range(len(varName)):
             cut = cut + "&" + varName[i]
             cut = cut.lstrip("&")
-            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, "Z_m", sample, cut)
-            value_weight[sample][cutName[i+6]] = getVariableHistsEventsNumber_weight(filesTree, "Z_m", sample, cut)
+            value[sample][cutName[i+6]] = getVariableHistsEventsNumber(filesTree, "H_m", sample, cut)
+            value_weight[sample][cutName[i+6]] = getVariableHistsEventsNumber_weight(filesTree, "H_m", sample, cut)
 
-
+    '''
     value_weight['totalMC'] = {}
     value['totalMC'] = {}
     for cut in cutName:
@@ -128,13 +125,19 @@ def CountCutFlow(ana_cfg, lumi, outPath):
                 value_weight['totalMC'][cut] += value[sample][cut] * weight[sample]
             else:
                 value_weight['totalMC'][cut] += value_weight[sample][cut]
+    '''
 
+    #Ncolum = Ncolum + "c|" + "}\n"
+    #name_line = name_line + "&totalMC" + "\\cr\\hline\n"
 
-    Ncolum = Ncolum + "c|" + "}\n"
-    name_line = name_line + "&totalMC" + "\\cr\\hline\n"
+    #line_xs = line_xs + "&0" + "\\cr\\hline\n"
+    #line_weight = line_weight + "&" + "\\cr\\hline\n"
 
-    line_xs = line_xs + "&0" + "\\cr\\hline\n"
-    line_weight = line_weight + "&" + "\\cr\\hline\n"
+    Ncolum = Ncolum + "}\n"
+    name_line = name_line + "\\cr\\hline\n" #FIXMe
+
+    line_xs = line_xs + "\\cr\\hline\n"
+    line_weight = line_weight + "\\cr\\hline\n"
 
     outTable.write("\\resizebox{\\textwidth}{60mm}{\n")
     outTable.write("\\setlength{\\tabcolsep}{2mm}{\n")
@@ -149,7 +152,9 @@ def CountCutFlow(ana_cfg, lumi, outPath):
     for i in range(len(cutName)):
         line_w = cutName[i]
         line_bw = "(befor weighted)"
-        for sample in ana_cfg.samp_names + ['totalMC']:
+        line_eff = "(cut efficiency)"
+        #for sample in ana_cfg.samp_names + ['totalMC']:
+        for sample in ana_cfg.samp_names: #FIXMe
             if sample != 'data':
                 line_bw = line_bw + "&" + "(" + str(value[sample][cutName[i]]) + ")"
             else:
@@ -161,13 +166,24 @@ def CountCutFlow(ana_cfg, lumi, outPath):
                     line_w = line_w + "&" + str(value[sample][cutName[i]] * weight[sample])
             else:
                 line_w = line_w + "&" + str(value_weight[sample][cutName[i]])
+
+            if i==0:
+                line_eff = line_eff + "& 1.0"
+            elif i <6:
+                line_eff = line_eff + "&" + str((value[sample][cutName[i]] * weight[sample])/(value[sample][cutName[i-1]] * weight[sample]))
+            elif i <7:
+                line_eff = line_eff + "&" + str(value_weight[sample][cutName[i]]/(value[sample][cutName[i-1]] * weight[sample]))
+            else:
+                line_eff = line_eff + "&" + str(value_weight[sample][cutName[i]]/value_weight[sample][cutName[i-1]])
+
         outTable.write(line_w+"\\cr\n")
-        outTable.write(line_bw+"\\cr\\hline\n")
+        outTable.write(line_bw+"\\cr\n")
+        outTable.write(line_eff+"\\cr\\hline\n")
         if i == 4 or i == 5: outTable.write("\\hline\n")
 
 
     outTable.write("\\end{tabular}}}\n")
-    outTable.write("\\end{table}\n")
+    outTable.write("\\end{sidewaystable}\n")
     outTable.write("\\end{landscape}\n")
 
 
@@ -518,9 +534,12 @@ def plot2D_mgg(canv, hitos2D_sig):
     canv.cd()
 
     upper_pad = TPad("upperpad", "upperpad", 0.05,0.05, 0.95,0.95)
+    upper_pad.SetLeftMargin(0.13)
+    upper_pad.SetRightMargin(0.2)
+    upper_pad.SetTopMargin(0.085)
     upper_pad.Draw()
     upper_pad.cd()
-    hitos2D_sig.GetXaxis().SetTitle("M_{#gamma#gamma}")
+    hitos2D_sig.GetXaxis().SetTitle("M_{#gamma#gamma} (GeV)")
     hitos2D_sig.GetXaxis().SetTitleSize(0.05)
     hitos2D_sig.GetYaxis().SetTitle("mvaVal")
     hitos2D_sig.GetYaxis().SetTitleSize(0.05)
@@ -665,10 +684,14 @@ def CountYield(ana_cfg, histos, sys_name):
 
 
 
-def CountNormalizationYield(ana_cfg, histos, sys_names):
+def CountNormalizationYield(ana_cfg, histos, sys_names, channel, year):
 
-    file = open('./BDTSys/NormalizationSys.txt', 'a')
+    if year == "-2016":
+        file = open('./BDTSys/NormalizationSys_16APV_'+channel+'.txt', 'a')
+    else:
+        file = open('./BDTSys/NormalizationSys_'+year.lstrip('20')+'_'+channel+'.txt', 'a')
     print 'Printing event yield: '
+    file.write('year:'+year+'_'+channel+ '\n')
 
 
     title = '{0:15}\t\t'.format('sample')
@@ -686,24 +709,29 @@ def CountNormalizationYield(ana_cfg, histos, sys_names):
 
 
 
-def CountBDTSys(ana_cfg, histos, sys_names):
+def CountBDTSys(ana_cfg, histos, sys_names, channel, year):
 
-    file = open('./BDTSys/BDTSys.txt', 'a')
+    if year == "-2016":
+        file = open('./BDTSys/BDTSys_16APV_'+channel+'.txt', 'a')
+    else:
+        file = open('./BDTSys/BDTSys_'+year.lstrip('20')+'_'+channel+'.txt', 'a')
+
     print 'Printing event yield: '
 
+    file.write("year:"+ year +'_'+channel + '\n')
 
     title = '{0:15}\t\t'.format('sample')
     for sys_name in sys_names:
         if sys_name=='norm':
-            title = title + '{0:25}\t\t\t\t\t'.format(sys_name)
+            title = title + '{0:25}\t\t\t'.format(sys_name)
         else:
-            title = title + '{0:25}\t\t\t\t\t{1:25}\t\t\t\t\t'.format(sys_name+'_up',sys_name+'_dn')
+            title = title + '{0:25}\t\t\t{1:25}\t\t\t'.format(sys_name+'_up',sys_name+'_dn')
     print title
     file.write(title + '\n')
 
 
 
-    for sample in ana_cfg.bkg_names:
+    for sample in ana_cfg.sig_names:
         norm = histos[sample][sys_names[0]].Integral()
         line = '{0:10}\t'.format(sample)
         for sys_name in sys_names:

@@ -30,9 +30,11 @@ parser.add_argument('--cut', dest='cut', action='store_true', default=False, hel
 parser.add_argument("--mA", dest="mA", default="M5", help="ALP mass")
 parser.add_argument('-b', '--blind', dest='blind', action='store_true', default=False, help='Blind signal region')
 parser.add_argument('-ln', '--ln', dest='ln', action='store_true', default=False, help='log plot?')
+parser.add_argument('--ele', dest='ele', action='store_true', default=False, help='electron channel?')
+parser.add_argument('--mu', dest='mu', action='store_true', default=False, help='muon channel?')
 args = parser.parse_args()
 
-mass = 'param'
+version = 'UL'
 
 
 
@@ -41,37 +43,44 @@ gROOT.SetBatch(True)
 
 mva = args.mva
 if args.CR:
-    name = mass + '_CR'
+    name = version + '_CR'
 elif args.SR:
-    name = mass + '_SR'
+    name = version + '_SR'
 elif mva:
-    name = mass + '_mva'
+    name = version + '_mva'
 else:
-    name = mass
+    name = version
 
 if args.cut: name = name + '_cut_' + args.mA
 
+if args.ele:
+    name = name + '_ele'
+if args.mu:
+    name = name + '_mu'
+
+
 if args.year == '2016':
     file_out = 'plots_16'
-    out_name = "ALP_plot_data16_"+name+".root"
     BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2016.pkl"
     #mvaCut = 0.8675
 elif args.year == '2017':
     file_out = 'plots_17'
-    out_name = "ALP_plot_data17_"+name+".root"
     BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2017.pkl"
     #mvaCut = 0.8365
 elif args.year == '2018':
     file_out = 'plots_18'
-    out_name = "ALP_plot_data18_"+name+".root"
     BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2018.pkl"
     #mvaCut = 0.9766
 elif args.year == 'run2':
-    file_out = 'plots_run2'
-    out_name = "ALP_plot_run2_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_runII.pkl"
-    mvaCut = {'M1':0.94, 'M5':0.945, 'M15':0.97, 'M30':0.97}
-    #sig_1sigma = {'M1':2.67, 'M5':1.81, 'M15':1.83, 'M30':1.85}
+    file_out = 'plots_run2UL'
+
+    if args.ele:
+        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param_ele.pkl"
+    elif args.mu:
+        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param_mu.pkl"
+    else:
+        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param.pkl"
+
 else:
     print "do not include at 2016/2017/2018"
     exit(0)
@@ -89,19 +98,11 @@ def main():
         os.makedirs(file_plot)
 
 
-    analyzer_cfg = AC.Analyzer_Config('inclusive', mass,args.year)
+    analyzer_cfg = AC.Analyzer_Config('inclusive', args.year)
 
     analyzer_cfg.Print_Config()
     ntuples = LoadNtuples(analyzer_cfg)
 
-
-    #var_names = ['Z_m', 'H_m', 'ALP_m', 'pho1IetaIeta', 'pho1IetaIeta55', 'pho1PIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMa', 'var_PtaOverMh', 'var_Pta', 'var_MhMa', 'var_MhMZ', 'ALP_calculatedPhotonIso']
-    var_names = ['Z_m', 'H_m', 'ALP_m','pho1Pt', 'pho1eta', 'pho1phi', 'pho1R9', 'pho1IetaIeta', 'pho1IetaIeta55','pho1PIso_noCorr' ,'pho2Pt', 'pho2eta', 'pho2phi', 'pho2R9', 'pho2IetaIeta', 'pho2IetaIeta55','pho2PIso_noCorr','ALP_calculatedPhotonIso', 'var_dR_Za', 'var_dR_g1g2', 'var_dR_g1Z', 'var_PtaOverMh', 'var_Pta', 'var_MhMZ', 'H_pt', 'var_PtaOverMa', 'var_MhMa', 'mvaVal_M1', 'mvaVal_M5', 'mvaVal_M15', 'mvaVal_M30']
-    var_mva = []
-    for ALP_mass in analyzer_cfg.sig_names:
-        for r in ['1sigma', '1P5sigma', '2sigma', '3sigma']:
-            var_mva.append('mvaVal_'+r+'_'+ALP_mass)
-    var_names = var_names + var_mva
 
     #### systematic uncertainties ######
     plot_cfg = PC.Plot_Config(analyzer_cfg, args.year)
@@ -111,7 +112,7 @@ def main():
     histos = {}
     histos_sys = {}
 
-    mass_list = {'M1':1.0, 'M5':5.0, 'M15':15.0, 'M30':30.0}
+    mass_list = {'M1':1.0, 'M2':2.0, 'M3':3.0, 'M4':4.0, 'M5':5.0, 'M6':6.0, 'M7':7.0, 'M8':8.0, 'M9':9.0, 'M10':10.0, 'M15':15.0, 'M20':20.0, 'M25':25.0, 'M30':30.0}
     histos['mvaVal_bkg']    = TH2F('mvaVal_bkg', 'mvaVal_bkg', 35,  0., 35., 100, 0., 1)#2D
 
     histos['mvaVal_bkg_mgg'] = {}
@@ -130,14 +131,22 @@ def main():
 
         for iEvt in range( ntup.GetEntries() ):
             ntup.GetEvent(iEvt)
-            #if (iEvt == 100): break
+            #if (iEvt == 50): break
 
 
             if (iEvt % 100000 == 1):
                 print "looking at event %d" %iEvt
 
 
-            weight = ntup.factor * ntup.pho1SFs_dR0P15 * ntup.pho1SFs_dR0P15
+            if args.ele:
+                if abs(ntup.l1_id) == 13: 
+                    continue
+            if args.mu:
+                if abs(ntup.l1_id) == 11: 
+                    continue
+
+
+            weight = ntup.factor * ntup.pho1SFs * ntup.pho2SFs
 
             if (ntup.H_m > -90):
                 if not ntup.passChaHadIso: continue
@@ -159,7 +168,7 @@ def main():
 
                         param = (ntup.ALP_m - mass_list[ALP_mass])/ntup.H_m
 
-                        MVA_list = [ntup.pho1Pt, ntup.pho1eta, ntup.pho1phi, ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr ,ntup.pho2Pt, ntup.pho2eta, ntup.pho2phi, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.pho2PIso_noCorr,ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, ntup.var_PtaOverMh, ntup.H_pt, param]
+                        MVA_list = [ntup.pho1Pt, ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr ,ntup.pho2Pt, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.pho2PIso_noCorr,ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, ntup.var_PtaOverMh, ntup.H_pt, param]
                         MVA_value[ALP_mass] = model.predict_proba(MVA_list)[:, 1]
 
 

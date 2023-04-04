@@ -13,7 +13,7 @@ from Analyzer_Helper import MuPair, DimuCandidates, IsBtagLoose, IsBtagMed, IsBt
 import Analyzer_Configs as AC
 import Plot_Configs     as PC
 
-from Analyzer_ALP import PIso2D, plot2D, plot2D_CONT, CountYield, CountBDTSys
+from Analyzer_ALP import PIso2D, CountYield, CountBDTSys
 
 import CMS_lumi, tdrstyle
 import multiprocessing
@@ -27,9 +27,9 @@ parser.add_argument("-y", "--Year", dest="year", default="2017", help="which yea
 parser.add_argument('-C', '--CR', dest='CR', action='store_true', default=False, help='make control region')
 parser.add_argument('-m', '--mva', dest='mva', action='store_true', default=False, help='use mva or not')
 parser.add_argument("-s", "--sysName", dest="sysName", default="norm", help="name of the systematics")
+parser.add_argument('--ele', dest='ele', action='store_true', default=False, help='electron channel?')
+parser.add_argument('--mu', dest='mu', action='store_true', default=False, help='muon channel?')
 args = parser.parse_args()
-
-mass = 'massIndependent'
 
 
 
@@ -37,33 +37,10 @@ gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
 mva = args.mva
-if args.CR:
-    name = mass + '_CR'
-elif mva:
-    name = mass + '_mva'
-else:
-    name = mass
 
-if args.year == '2016':
-    file_out = 'plots_16'
-    out_name = "ALP_plot_data16_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2016.pkl"
-    mvaCut = 0.8675
-elif args.year == '2017':
-    file_out = 'plots_17'
-    out_name = "ALP_plot_data17_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2017.pkl"
-    mvaCut = 0.8365
-elif args.year == '2018':
-    file_out = 'plots_18'
-    out_name = "ALP_plot_data18_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_massindependent_2018.pkl"
-    mvaCut = 0.9204
-else:
-    print "do not include at 2016/2017/2018"
-    exit(0)
-
-file_plot = file_out + "/plot_"+name
+BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param.pkl"
+mvaCuts = {'M1':0.955, 'M2':0.98, 'M3':0.985, 'M4':0.98, 'M5':0.985, 'M6':0.99, 'M7':0.985, 'M8':0.99, 'M9':0.99, 'M10':0.99, 'M15':0.99, 'M20':0.99, 'M25':0.985, 'M30':0.98}
+mass_list = {'M1':1.0, 'M2':2.0, 'M3':3.0, 'M4':4.0, 'M5':5.0, 'M6':6.0, 'M7':7.0, 'M8':8.0, 'M9':9.0, 'M10':10.0, 'M15':15.0, 'M20':20.0, 'M25':25.0, 'M30':30.0}
 # load the model from disk
 model = pickle.load(open(BDT_filename, 'rb'))
 
@@ -73,16 +50,14 @@ def Cal_mvaVal(*mvalist):
 
 def main():
 
-
-
-    analyzer_cfg = AC.Analyzer_Config('inclusive', mass,args.year)
+    analyzer_cfg = AC.Analyzer_Config('inclusive',args.year)
     analyzer_cfg.Print_Config()
     ntuples = LoadNtuples(analyzer_cfg)
 
 
-
-    var_names = ['ALP_m']
-    sys_names = ['norm', 'ShowerShape', 'pho_scale', 'pho_smear', 'lep_scale', 'lep_smear']
+    #sys_names = ['norm', 'ShowerShape', 'CMS_scale_g', 'CMS_smear_g', 'CMS_scale_lep', 'CMS_smear_lep']
+    sys_names = ['norm', 'ShowerShape', 'CMS_scale_g', 'CMS_smear_g', 'CMS_scale_lep', 'CMS_smear_lep', 'CMS_R9_g', 'CMS_SigmaIEtaIEta_g', 'CMS_PhotonIso_g', 'CMS_ALPIso_g']#bing
+    #sys_names = ['norm', 'CMS_R9_g']#bing
     #sys_names = ['norm']
     #sys_names.append(args.sysName)
 
@@ -94,7 +69,7 @@ def main():
 
     histos = {}
 
-    for sample in analyzer_cfg.bkg_names:
+    for sample in analyzer_cfg.sig_names:
         histos[sample] = {}
         histos[sample]['norm'] = TH1F('mvaVal_norm'    + '_' + sample, 'mvaVal_norm'    + '_' + sample, 50,  -0.1, 1.1)
         for sys_name in sys_names:
@@ -108,18 +83,25 @@ def main():
         print '##############'
         print 'Systematics : ' +  sys_name
         print '##############'
-        for sample in analyzer_cfg.bkg_names:
+        for sample in analyzer_cfg.sig_names:
             ntup = ntuples[sample] # just a short name
             print '\n\nOn sample: %s' %sample
             print 'total events: %d' %ntup.GetEntries()
 
             for iEvt in range( ntup.GetEntries() ):
                 ntup.GetEvent(iEvt)
-                #if (iEvt == 50): break
+                #if (iEvt == 500): break
 
 
                 if (iEvt % 100000 == 1):
                     print "looking at event %d" %iEvt
+
+                if args.ele:
+                    if abs(ntup.l1_id) == 13: 
+                        continue
+                if args.mu:
+                    if abs(ntup.l1_id) == 11: 
+                        continue
 
 
                 weight = ntup.factor * ntup.pho1SFs * ntup.pho2SFs
@@ -130,10 +112,7 @@ def main():
                     if not ntup.passNeuHadIso: continue
                     if not ntup.passdR_gl: continue
                     if not ntup.passHOverE: continue
-                    if not args.CR:
-                        if ntup.H_m>130. or ntup.H_m<118.: continue
-                    else:
-                        if ntup.H_m<130. and ntup.H_m>118.: continue
+                    if ntup.H_m>180. or ntup.H_m<110.: continue
 
 
 
@@ -223,27 +202,17 @@ def main():
                         l2_smeardn.SetPxPyPzE(l2_norm.Px()*ntup.l2_smeardn, l2_norm.Py()*ntup.l2_smeardn, l2_norm.Pz()*ntup.l2_smeardn, l2_norm.E()*ntup.l2_smeardn)
 
 
-                    Pta_norm = (pho1_norm + pho2_norm).Pt()
-                    Pta_pho_scale_up = (pho1_scaleup + pho2_scaleup).Pt()
-                    Pta_pho_scale_dn = (pho1_scaledn + pho2_scaledn).Pt()
-                    Pta_pho_smear_up = (pho1_smearup + pho2_smearup).Pt()
-                    Pta_pho_smear_dn = (pho1_smeardn + pho2_smeardn).Pt()
-                    Pta_pho_ShowerShape_up = (pho1_ShowerShapeup + pho2_ShowerShapeup).Pt()
-                    Pta_pho_ShowerShape_dn = (pho1_ShowerShapedn + pho2_ShowerShapedn).Pt()
-
-
-                    MhMZ_norm = (pho1_norm + pho2_norm + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_scale_up = (pho1_scaleup + pho2_scaleup + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_scale_dn = (pho1_scaledn + pho2_scaledn + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_smear_up = (pho1_smearup + pho2_smearup + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_smear_dn = (pho1_smeardn + pho2_smeardn + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_ShowerShape_up = (pho1_ShowerShapeup + pho2_ShowerShapeup + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_pho_ShowerShape_dn = (pho1_ShowerShapedn + pho2_ShowerShapedn + l1_norm + l2_norm).M() + (l1_norm + l2_norm).M()
-                    MhMZ_lep_scale_up = (pho1_norm + pho2_norm + l1_scaleup + l2_scaleup).M() + (l1_scaleup + l2_scaleup).M()
-                    MhMZ_lep_scale_dn = (pho1_norm + pho2_norm + l1_scaledn + l2_scaledn).M() + (l1_scaledn + l2_scaledn).M()
-                    MhMZ_lep_smear_up = (pho1_norm + pho2_norm + l1_smearup + l2_smearup).M() + (l1_smearup + l2_smearup).M()
-                    MhMZ_lep_smear_dn = (pho1_norm + pho2_norm + l1_smeardn + l2_smeardn).M() + (l1_smeardn + l2_smeardn).M()
-
+                    PtaOverMh_norm = (pho1_norm + pho2_norm).Pt()/(pho1_norm + pho2_norm + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_scale_up = (pho1_scaleup + pho2_scaleup).Pt()/(pho1_scaleup + pho2_scaleup + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_scale_dn = (pho1_scaledn + pho2_scaledn).Pt()/(pho1_scaledn + pho2_scaledn + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_smear_up = (pho1_smearup + pho2_smearup).Pt()/(pho1_smearup + pho2_smearup + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_smear_dn = (pho1_smeardn + pho2_smeardn).Pt()/(pho1_smeardn + pho2_smeardn + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_ShowerShape_up = (pho1_ShowerShapeup + pho2_ShowerShapeup).Pt()/(pho1_ShowerShapeup + pho2_ShowerShapeup + l1_norm + l2_norm).M()
+                    PtaOverMh_pho_ShowerShape_dn = (pho1_ShowerShapedn + pho2_ShowerShapedn).Pt()/(pho1_ShowerShapedn + pho2_ShowerShapedn + l1_norm + l2_norm).M()
+                    PtaOverMh_lep_scale_up = (pho1_norm + pho2_norm).Pt()/(pho1_norm + pho2_norm + l1_scaleup + l2_scaleup).M()
+                    PtaOverMh_lep_scale_dn = (pho1_norm + pho2_norm).Pt()/(pho1_norm + pho2_norm + l1_scaledn + l2_scaledn).M()
+                    PtaOverMh_lep_smear_up = (pho1_norm + pho2_norm).Pt()/(pho1_norm + pho2_norm + l1_smearup + l2_smearup).M()
+                    PtaOverMh_lep_smear_dn = (pho1_norm + pho2_norm).Pt()/(pho1_norm + pho2_norm + l1_smeardn + l2_smeardn).M()
 
                     H_pt_norm = (pho1_norm + pho2_norm + l1_norm + l2_norm).Pt()
                     H_pt_pho_scale_up = (pho1_scaleup + pho2_scaleup + l1_norm + l2_norm).Pt()
@@ -257,33 +226,64 @@ def main():
                     H_pt_lep_smear_up = (pho1_norm + pho2_norm + l1_smearup + l2_smearup).Pt()
                     H_pt_lep_smear_dn = (pho1_norm + pho2_norm + l1_smeardn + l2_smeardn).Pt()
 
+                    
+                    param_norm = ((pho1_norm + pho2_norm).M()-mass_list[sample])/(pho1_norm + pho2_norm + l1_norm + l2_norm).M()
+                    param_pho_scale_up = ((pho1_scaleup + pho2_scaleup).M()-mass_list[sample])/(pho1_scaleup + pho2_scaleup + l1_norm + l2_norm).M()
+                    param_pho_scale_dn = ((pho1_scaledn + pho2_scaledn).M()-mass_list[sample])/(pho1_scaledn + pho2_scaledn + l1_norm + l2_norm).M()
+                    param_pho_smear_up = ((pho1_smearup + pho2_smearup).M()-mass_list[sample])/(pho1_smearup + pho2_smearup + l1_norm + l2_norm).M()
+                    param_pho_smear_dn = ((pho1_smeardn + pho2_smeardn).M()-mass_list[sample])/(pho1_smeardn + pho2_smeardn + l1_norm + l2_norm).M()
+                    param_pho_ShowerShape_up = ((pho1_ShowerShapeup + pho2_ShowerShapeup).M()-mass_list[sample])/(pho1_ShowerShapeup + pho2_ShowerShapeup + l1_norm + l2_norm).M()
+                    param_pho_ShowerShape_dn = ((pho1_ShowerShapedn + pho2_ShowerShapedn).M()-mass_list[sample])/(pho1_ShowerShapedn + pho2_ShowerShapedn + l1_norm + l2_norm).M()
+                    param_lep_scale_up = ((pho1_norm + pho2_norm).M()-mass_list[sample])/(pho1_norm + pho2_norm + l1_scaleup + l2_scaleup).M()
+                    param_lep_scale_dn = ((pho1_norm + pho2_norm).M()-mass_list[sample])/(pho1_norm + pho2_norm + l1_scaledn + l2_scaledn).M()
+                    param_lep_smear_up = ((pho1_norm + pho2_norm).M()-mass_list[sample])/(pho1_norm + pho2_norm + l1_smearup + l2_smearup).M()
+                    param_lep_smear_dn = ((pho1_norm + pho2_norm).M()-mass_list[sample])/(pho1_norm + pho2_norm + l1_smeardn + l2_smeardn).M()
+
                     MVA_list = {}
-                    MVA_list['norm'] = [ntup.pho1Pt, ntup.pho1eta, ntup.pho1phi, ntup.pho1R9, ntup.pho1IetaIeta55 ,ntup.pho2Pt, ntup.pho2eta, ntup.pho2phi, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, ntup.var_Pta, ntup.var_MhMZ, ntup.H_pt ]
+                    MVA_list['norm'] = [ntup.pho1Pt, ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr ,ntup.pho2Pt, ntup.pho2R9, ntup.pho2IetaIeta55,ntup.pho2PIso_noCorr,ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, ntup.var_PtaOverMh, ntup.H_pt, param_norm]
+                    #MVA_list['norm'] = [ntup.pho1Pt, ntup.pho1R9, ntup.pho1IetaIeta55 ,ntup.pho2Pt,ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, ntup.var_Pta, ntup.var_MhMZ, ntup.H_pt ]
 
                     MVA_list['ShowerShape'] = {}
-                    MVA_list['ShowerShape']['up'] = [pho1_ShowerShapeup.Pt(), pho1_ShowerShapeup.Eta(), pho1_ShowerShapeup.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_ShowerShapeup.Pt(), pho2_ShowerShapeup.Eta(), pho2_ShowerShapeup.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_ShowerShape_up, MhMZ_pho_ShowerShape_up, H_pt_pho_ShowerShape_up]
-                    MVA_list['ShowerShape']['dn'] = [pho1_ShowerShapedn.Pt(), pho1_ShowerShapedn.Eta(), pho1_ShowerShapedn.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_ShowerShapedn.Pt(), pho2_ShowerShapedn.Eta(), pho2_ShowerShapedn.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_ShowerShape_dn, MhMZ_pho_ShowerShape_dn, H_pt_pho_ShowerShape_dn]
+                    MVA_list['ShowerShape']['up'] = [pho1_ShowerShapeup.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_ShowerShapeup.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_ShowerShape_up, H_pt_pho_ShowerShape_up, param_pho_ShowerShape_up]
+                    MVA_list['ShowerShape']['dn'] = [pho1_ShowerShapedn.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_ShowerShapedn.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_ShowerShape_dn, H_pt_pho_ShowerShape_dn, param_pho_ShowerShape_dn]
 
-                    MVA_list['pho_scale'] = {}
-                    MVA_list['pho_scale']['up'] = [pho1_scaleup.Pt(), pho1_scaleup.Eta(), pho1_scaleup.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_scaleup.Pt(), pho2_scaleup.Eta(), pho2_scaleup.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_scale_up, MhMZ_pho_scale_up, H_pt_pho_scale_up ]
-                    MVA_list['pho_scale']['dn'] = [pho1_scaledn.Pt(), pho1_scaledn.Eta(), pho1_scaledn.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_scaledn.Pt(), pho2_scaledn.Eta(), pho2_scaledn.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_scale_dn, MhMZ_pho_scale_dn, H_pt_pho_scale_dn ]
-                    MVA_list['pho_smear'] = {}
-                    MVA_list['pho_smear']['up'] = [pho1_smearup.Pt(), pho1_smearup.Eta(), pho1_smearup.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_smearup.Pt(), pho2_smearup.Eta(), pho2_smearup.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_smear_up, MhMZ_pho_smear_up, H_pt_pho_smear_up ]
-                    MVA_list['pho_smear']['dn'] = [pho1_smeardn.Pt(), pho1_smeardn.Eta(), pho1_smeardn.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_smeardn.Pt(), pho2_smeardn.Eta(), pho2_smeardn.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_pho_smear_dn, MhMZ_pho_smear_dn, H_pt_pho_smear_dn ]
+                    MVA_list['CMS_scale_g'] = {}
+                    MVA_list['CMS_scale_g']['up'] = [pho1_scaleup.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_scaleup.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_scale_up, H_pt_pho_scale_up, param_pho_scale_up]
+                    MVA_list['CMS_scale_g']['dn'] = [pho1_scaledn.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_scaledn.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_scale_dn, H_pt_pho_scale_dn, param_pho_scale_dn]
+                    MVA_list['CMS_smear_g'] = {}
+                    MVA_list['CMS_smear_g']['up'] = [pho1_smearup.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_smearup.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_smear_up, H_pt_pho_smear_up, param_pho_smear_up]
+                    MVA_list['CMS_smear_g']['dn'] = [pho1_smeardn.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_smeardn.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_pho_smear_dn, H_pt_pho_smear_dn, param_pho_smear_dn]
 
-                    MVA_list['lep_scale'] = {}
-                    MVA_list['lep_scale']['up'] = [pho1_norm.Pt(), pho1_norm.Eta(), pho1_norm.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_norm.Pt(), pho2_norm.Eta(), pho2_norm.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_norm, MhMZ_lep_scale_up, H_pt_lep_scale_up ]
-                    MVA_list['lep_scale']['dn'] = [pho1_norm.Pt(), pho1_norm.Eta(), pho1_norm.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_norm.Pt(), pho2_norm.Eta(), pho2_norm.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_norm, MhMZ_lep_scale_dn, H_pt_lep_scale_dn ]
-                    MVA_list['lep_smear'] = {}
-                    MVA_list['lep_smear']['up'] = [pho1_norm.Pt(), pho1_norm.Eta(), pho1_norm.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_norm.Pt(), pho2_norm.Eta(), pho2_norm.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_norm, MhMZ_lep_smear_up, H_pt_lep_smear_up ]
-                    MVA_list['lep_smear']['dn'] = [pho1_norm.Pt(), pho1_norm.Eta(), pho1_norm.Phi(), ntup.pho1R9, ntup.pho1IetaIeta55, pho2_norm.Pt(), pho2_norm.Eta(), pho2_norm.Phi(), ntup.pho2R9, ntup.pho2IetaIeta55,ntup.ALP_calculatedPhotonIso, ntup.var_dR_g1Z, Pta_norm, MhMZ_lep_smear_dn, H_pt_lep_smear_dn ]
+                    MVA_list['CMS_scale_lep'] = {}
+                    MVA_list['CMS_scale_lep']['up'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_scale_up, param_lep_scale_up]
+                    MVA_list['CMS_scale_lep']['dn'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_scale_dn, param_lep_scale_dn]
+                    MVA_list['CMS_smear_lep'] = {}
+                    MVA_list['CMS_smear_lep']['up'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_up, param_lep_smear_up]
+                    MVA_list['CMS_smear_lep']['dn'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_dn, param_lep_smear_dn]
+
+                    scale_value = 0.005
+                    MVA_list['CMS_R9_g'] = {}
+                    MVA_list['CMS_R9_g']['up'] = [pho1_norm.Pt(), ntup.pho1R9*(1.0+scale_value), ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9*(1.0+scale_value), ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_up, param_lep_smear_up]
+                    MVA_list['CMS_R9_g']['dn'] = [pho1_norm.Pt(), ntup.pho1R9*(1.0-scale_value), ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9*(1.0-scale_value), ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_dn, param_lep_smear_dn]
+
+                    MVA_list['CMS_SigmaIEtaIEta_g'] = {}
+                    MVA_list['CMS_SigmaIEtaIEta_g']['up'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55*(1.0+0.01), ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55*(1.0+0.01), ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_up, param_lep_smear_up]
+                    MVA_list['CMS_SigmaIEtaIEta_g']['dn'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55*(1.0-0.01), ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55*(1.0-0.01), ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_dn, param_lep_smear_dn]
+
+                    MVA_list['CMS_PhotonIso_g'] = {}
+                    MVA_list['CMS_PhotonIso_g']['up'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr*(1.0+0.01), pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr*(1.0+0.01), ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_up, param_lep_smear_up]
+                    MVA_list['CMS_PhotonIso_g']['dn'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr*(1.0-0.01), pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr*(1.0-0.01), ntup.ALP_calculatedPhotonIso, ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_dn, param_lep_smear_dn]
+
+                    MVA_list['CMS_ALPIso_g'] = {}
+                    MVA_list['CMS_ALPIso_g']['up'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso*(1.0+0.05), ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_up, param_lep_smear_up]
+                    MVA_list['CMS_ALPIso_g']['dn'] = [pho1_norm.Pt(), ntup.pho1R9, ntup.pho1IetaIeta55, ntup.pho1PIso_noCorr, pho2_norm.Pt(), ntup.pho2R9, ntup.pho2IetaIeta55, ntup.pho2PIso_noCorr, ntup.ALP_calculatedPhotonIso*(1.0-0.05), ntup.var_dR_Za, ntup.var_dR_g1g2, ntup.var_dR_g1Z, PtaOverMh_norm, H_pt_lep_smear_dn, param_lep_smear_dn]
 
 
                     #MVA_value = model.predict_proba(MVA_list)[:, 1]
                     #if MVA_value < mvaCut:continue
                     #histos['mvaVal'][sample].Fill( MVA_value, weight )
 
-                    #mva_v = [MVA_list['norm'], MVA_list['ShowerShape']['up'], MVA_list['ShowerShape']['dn'], MVA_list['pho_scale']['up'], MVA_list['pho_scale']['dn'], MVA_list['pho_smear']['up'], MVA_list['pho_smear']['dn'], MVA_list['lep_scale']['up'], MVA_list['lep_scale']['dn'], MVA_list['lep_smear']['up'], MVA_list['lep_smear']['dn']]
+                    #mva_v = [MVA_list['norm'], MVA_list['ShowerShape']['up'], MVA_list['ShowerShape']['dn'], MVA_list['CMS_scale_g']['up'], MVA_list['CMS_scale_g']['dn'], MVA_list['CMS_smear_g']['up'], MVA_list['CMS_smear_g']['dn'], MVA_list['CMS_scale_lep']['up'], MVA_list['CMS_scale_lep']['dn'], MVA_list['CMS_smear_lep']['up'], MVA_list['CMS_smear_lep']['dn']]
                     #results = pool.map(Cal_mvaVal, mva_v)
                     #print results
                     #pool.close()
@@ -293,14 +293,14 @@ def main():
                     val_norm = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['norm']))
                     val_ShowerShape_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['ShowerShape']['up']))
                     val_ShowerShape_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['ShowerShape']['dn']))
-                    val_pho_scale_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['pho_scale']['up']))
-                    val_pho_scale_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['pho_scale']['dn']))
-                    val_pho_smear_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['pho_smear']['up']))
-                    val_pho_smear_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['pho_smear']['dn']))
-                    val_lep_scale_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['lep_scale']['up']))
-                    val_lep_scale_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['lep_scale']['dn']))
-                    val_lep_smear_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['lep_smear']['up']))
-                    val_lep_smear_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['lep_smear']['dn']))
+                    val_pho_scale_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_scale_g']['up']))
+                    val_pho_scale_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_scale_g']['dn']))
+                    val_pho_smear_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_smear_g']['up']))
+                    val_pho_smear_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_smear_g']['dn']))
+                    val_lep_scale_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_scale_lep']['up']))
+                    val_lep_scale_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_scale_lep']['dn']))
+                    val_lep_smear_up = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_smear_lep']['up']))
+                    val_lep_smear_dn = multiprocessing.Process(target=Cal_mvaVal,args=(MVA_list['CMS_smear_lep']['dn']))
 
                     val_ShowerShape_up.start()
                     val_ShowerShape_dn.start()
@@ -327,51 +327,83 @@ def main():
                     print val_ShowerShape_up #+ 'zzz' + val_ShowerShape_dn + 'zzz' + val_pho_scale_up + 'zzz' + val_pho_scale_dn
                     '''
 
-                    #['ShowerShape', 'pho_scale', 'pho_smear', 'lep_scale', 'lep_smear']
+                    #['ShowerShape', 'CMS_scale_g', 'CMS_smear_g', 'CMS_scale_lep', 'CMS_smear_lep']
                     if sys_name == 'ShowerShape':
                         val_ShowerShape_up = model.predict_proba(MVA_list['ShowerShape']['up'])[:, 1]
                         val_ShowerShape_dn = model.predict_proba(MVA_list['ShowerShape']['dn'])[:, 1]
 
-                        if val_ShowerShape_up > mvaCut:
+                        if val_ShowerShape_up > mvaCuts[sample]:
                             histos[sample]['ShowerShape']['up'].Fill(val_ShowerShape_up, weight)
-                        if val_ShowerShape_dn > mvaCut:
+                        if val_ShowerShape_dn > mvaCuts[sample]:
                             histos[sample]['ShowerShape']['dn'].Fill(val_ShowerShape_dn, weight)
-                    elif sys_name == 'pho_scale':
-                        val_pho_scale_up = model.predict_proba(MVA_list['pho_scale']['up'])[:, 1]
-                        val_pho_scale_dn = model.predict_proba(MVA_list['pho_scale']['dn'])[:, 1]
+                    elif sys_name == 'CMS_scale_g':
+                        val_pho_scale_up = model.predict_proba(MVA_list['CMS_scale_g']['up'])[:, 1]
+                        val_pho_scale_dn = model.predict_proba(MVA_list['CMS_scale_g']['dn'])[:, 1]
 
-                        if val_pho_scale_up > mvaCut:
-                            histos[sample]['pho_scale']['up'].Fill(val_pho_scale_up , weight)
-                        if val_pho_scale_dn > mvaCut:
-                            histos[sample]['pho_scale']['dn'].Fill(val_pho_scale_dn , weight)
-                    elif sys_name == 'pho_smear':
-                        val_pho_smear_up = model.predict_proba(MVA_list['pho_smear']['up'])[:, 1]
-                        val_pho_smear_dn = model.predict_proba(MVA_list['pho_smear']['dn'])[:, 1]
+                        if val_pho_scale_up > mvaCuts[sample]:
+                            histos[sample]['CMS_scale_g']['up'].Fill(val_pho_scale_up , weight)
+                        if val_pho_scale_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_scale_g']['dn'].Fill(val_pho_scale_dn , weight)
+                    elif sys_name == 'CMS_smear_g':
+                        val_pho_smear_up = model.predict_proba(MVA_list['CMS_smear_g']['up'])[:, 1]
+                        val_pho_smear_dn = model.predict_proba(MVA_list['CMS_smear_g']['dn'])[:, 1]
 
-                        if val_pho_smear_up > mvaCut:
-                            histos[sample]['pho_smear']['up'].Fill(val_pho_smear_up , weight)
-                        if val_pho_smear_dn > mvaCut:
-                            histos[sample]['pho_smear']['dn'].Fill(val_pho_smear_dn , weight)
-                    elif sys_name == 'lep_scale':
-                        val_lep_scale_up = model.predict_proba(MVA_list['lep_scale']['up'])[:, 1]
-                        val_lep_scale_dn = model.predict_proba(MVA_list['lep_scale']['dn'])[:, 1]
+                        if val_pho_smear_up > mvaCuts[sample]:
+                            histos[sample]['CMS_smear_g']['up'].Fill(val_pho_smear_up , weight)
+                        if val_pho_smear_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_smear_g']['dn'].Fill(val_pho_smear_dn , weight)
+                    elif sys_name == 'CMS_scale_lep':
+                        val_lep_scale_up = model.predict_proba(MVA_list['CMS_scale_lep']['up'])[:, 1]
+                        val_lep_scale_dn = model.predict_proba(MVA_list['CMS_scale_lep']['dn'])[:, 1]
 
-                        if val_lep_scale_up > mvaCut:
-                            histos[sample]['lep_scale']['up'].Fill(val_lep_scale_up , weight)
-                        if val_lep_scale_dn > mvaCut:
-                            histos[sample]['lep_scale']['dn'].Fill(val_lep_scale_dn , weight)
-                    elif sys_name == 'lep_smear':
-                        val_lep_smear_up = model.predict_proba(MVA_list['lep_smear']['up'])[:, 1]
-                        val_lep_smear_dn = model.predict_proba(MVA_list['lep_smear']['dn'])[:, 1]
+                        if val_lep_scale_up > mvaCuts[sample]:
+                            histos[sample]['CMS_scale_lep']['up'].Fill(val_lep_scale_up , weight)
+                        if val_lep_scale_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_scale_lep']['dn'].Fill(val_lep_scale_dn , weight)
+                    elif sys_name == 'CMS_smear_lep':
+                        val_lep_smear_up = model.predict_proba(MVA_list['CMS_smear_lep']['up'])[:, 1]
+                        val_lep_smear_dn = model.predict_proba(MVA_list['CMS_smear_lep']['dn'])[:, 1]
 
-                        if val_lep_smear_up > mvaCut:
-                            histos[sample]['lep_smear']['up'].Fill(val_lep_smear_up , weight)
-                        if val_lep_smear_dn > mvaCut:
-                            histos[sample]['lep_smear']['dn'].Fill(val_lep_smear_dn , weight)
+                        if val_lep_smear_up > mvaCuts[sample]:
+                            histos[sample]['CMS_smear_lep']['up'].Fill(val_lep_smear_up , weight)
+                        if val_lep_smear_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_smear_lep']['dn'].Fill(val_lep_smear_dn , weight)
+                    elif sys_name == 'CMS_R9_g':
+                        val_CMS_R9_g_up = model.predict_proba(MVA_list['CMS_R9_g']['up'])[:, 1]
+                        val_CMS_R9_g_dn = model.predict_proba(MVA_list['CMS_R9_g']['dn'])[:, 1]
+
+                        if val_CMS_R9_g_up > mvaCuts[sample]:
+                            histos[sample]['CMS_R9_g']['up'].Fill(val_CMS_R9_g_up , weight)
+                        if val_CMS_R9_g_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_R9_g']['dn'].Fill(val_CMS_R9_g_dn , weight)
+                    elif sys_name == 'CMS_SigmaIEtaIEta_g':
+                        val_CMS_SigmaIEtaIEta_g_up = model.predict_proba(MVA_list['CMS_SigmaIEtaIEta_g']['up'])[:, 1]
+                        val_CMS_SigmaIEtaIEta_g_dn = model.predict_proba(MVA_list['CMS_SigmaIEtaIEta_g']['dn'])[:, 1]
+
+                        if val_CMS_SigmaIEtaIEta_g_up > mvaCuts[sample]:
+                            histos[sample]['CMS_SigmaIEtaIEta_g']['up'].Fill(val_CMS_SigmaIEtaIEta_g_up , weight)
+                        if val_CMS_SigmaIEtaIEta_g_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_SigmaIEtaIEta_g']['dn'].Fill(val_CMS_SigmaIEtaIEta_g_dn , weight)
+                    elif sys_name == 'CMS_PhotonIso_g':
+                        val_CMS_PhotonIso_g_up = model.predict_proba(MVA_list['CMS_PhotonIso_g']['up'])[:, 1]
+                        val_CMS_PhotonIso_g_dn = model.predict_proba(MVA_list['CMS_PhotonIso_g']['dn'])[:, 1]
+
+                        if val_CMS_PhotonIso_g_up > mvaCuts[sample]:
+                            histos[sample]['CMS_PhotonIso_g']['up'].Fill(val_CMS_PhotonIso_g_up , weight)
+                        if val_CMS_PhotonIso_g_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_PhotonIso_g']['dn'].Fill(val_CMS_PhotonIso_g_dn , weight)
+                    elif sys_name == 'CMS_ALPIso_g':
+                        val_CMS_ALPIso_g_up = model.predict_proba(MVA_list['CMS_ALPIso_g']['up'])[:, 1]
+                        val_CMS_ALPIso_g_dn = model.predict_proba(MVA_list['CMS_ALPIso_g']['dn'])[:, 1]
+
+                        if val_CMS_ALPIso_g_up > mvaCuts[sample]:
+                            histos[sample]['CMS_ALPIso_g']['up'].Fill(val_CMS_ALPIso_g_up , weight)
+                        if val_CMS_ALPIso_g_dn > mvaCuts[sample]:
+                            histos[sample]['CMS_ALPIso_g']['dn'].Fill(val_CMS_ALPIso_g_dn , weight)
                     else:
                         val_norm = model.predict_proba(MVA_list['norm'])[:, 1]
 
-                        if val_norm > mvaCut:
+                        if val_norm > mvaCuts[sample]:
                             histos[sample]['norm'].Fill(val_norm, weight)
 
 
@@ -391,7 +423,12 @@ def main():
 
     print '\n\n'
     #CountYield(analyzer_cfg, histos, sys_names[0])
-    CountBDTSys(analyzer_cfg, histos, sys_names)
+    if args.ele:
+        CountBDTSys(analyzer_cfg, histos, sys_names, "ele", args.year)
+    elif args.mu:
+        CountBDTSys(analyzer_cfg, histos, sys_names, "mu", args.year)
+    else:
+        CountBDTSys(analyzer_cfg, histos, sys_names, "combine", args.year)
 
     print 'Done'
 
