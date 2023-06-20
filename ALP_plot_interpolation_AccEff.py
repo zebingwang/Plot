@@ -196,7 +196,7 @@ def main():
         canvas.SetLeftMargin(0.13)
         canvas.SetTopMargin(0.085)
         canvas.SetBottomMargin(0.12)
-        colors = [2, 5, 3, 4]
+        colors = [2, 6, 209, 4]
         legend = TLegend(0.6,0.65,0.88,0.88)
         #gStyle.SetLegendFont(42)
         #gStyle.SetLegendTextSize(0.03)
@@ -245,8 +245,10 @@ def main():
         gr['18'].Draw("LP")
 
         # CMS style
-        CMS_lumi.cmsText = "CMS"
-        CMS_lumi.extraText = "Simulation Preliminary"
+        #CMS_lumi.cmsText = "CMS"
+        #CMS_lumi.extraText = "Simulation Preliminary"
+        CMS_lumi.cmsText = ""
+        CMS_lumi.extraText = ""
         CMS_lumi.cmsTextSize = 0.67
         CMS_lumi.lumiTextSize = 0.6
         CMS_lumi.lumiText_posY = 0.0075
@@ -262,11 +264,15 @@ def main():
         latex.SetTextFont(42)
         latex.SetTextSize(0.045)
         latex.SetTextAlign(31)
-        latex.DrawLatex(0.5,0.8, r"\ensuremath{H \rightarrow Za \rightarrow \ell\ell + 2\gamma}")
+        if channel=='ele':
+            latex.DrawLatex(0.5,0.85, r"H \rightarrow Za \rightarrow ee + 2\gamma")
+        else:
+            latex.DrawLatex(0.5,0.85, r"H \rightarrow Za \rightarrow \mu\mu + 2\gamma")
 
         legend.Draw('SAME')
 
         canvas.SaveAs('./interpolation/eff_'+channel+'.png')
+        canvas.SaveAs('./interpolation/eff_'+channel+'.pdf')
         canvas.Close()
         
       

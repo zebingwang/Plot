@@ -278,8 +278,10 @@ def main():
         
 
         # CMS style
-        CMS_lumi.cmsText = "CMS"
-        CMS_lumi.extraText = "Preliminary"
+        #CMS_lumi.cmsText = "CMS"
+        #CMS_lumi.extraText = "Preliminary"
+        CMS_lumi.cmsText = ""
+        CMS_lumi.extraText = ""
         CMS_lumi.cmsTextSize = 0.67
         CMS_lumi.lumiTextSize = 0.6
         CMS_lumi.lumiText_posY = 0.0075

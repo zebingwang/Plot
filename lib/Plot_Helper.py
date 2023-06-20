@@ -85,8 +85,8 @@ def MakeRatioPlot(h_data, h_MC, var_name):
     ratio_plot.GetXaxis().SetLimits( h_data.GetXaxis().GetXmin(), h_data.GetXaxis().GetXmax() )
     ratio_plot.GetXaxis().SetLabelSize(0.08)
     ratio_plot.GetXaxis().SetTitle(var_name)
-    ratio_plot.GetXaxis().SetTitleSize(0.1)
-    ratio_plot.GetXaxis().SetTitleOffset(0.95)
+    ratio_plot.GetXaxis().SetTitleSize(0.13)
+    ratio_plot.GetXaxis().SetTitleOffset(0.65)
     ratio_plot.GetXaxis().SetTickLength(0.08)
 
 
@@ -312,56 +312,7 @@ def Draw_unc(graph, color):
     #graph.Draw("SAME2")
     graph.Draw("SAME2")
 
-
-def SetgStyle():
-
-    gStyle.SetFrameFillColor(0)
-    gStyle.SetStatColor(0)
-    gStyle.SetOptStat(0)
-    gStyle.SetTitleFillColor(0)
-    gStyle.SetCanvasBorderMode(0)
-    gStyle.SetPadBorderMode(0)
-    gStyle.SetFrameBorderMode(0)
-    gStyle.SetPadColor(kWhite)
-    gStyle.SetCanvasColor(kWhite)
-    
-    
-    gStyle.SetCanvasDefH(600) #Height of canvas
-    gStyle.SetCanvasDefW(600) #Width of canvas
-    gStyle.SetCanvasDefX(0)   #POsition on screen
-    gStyle.SetCanvasDefY(0)
-
-    
-    #gStyle.SetPadLeftMargin(0.13)
-    #gStyle.SetPadRightMargin(0.1)
-    #gStyle.SetPadTopMargin(0.085)
-    #gStyle.SetPadBottomMargin(0.12)
-    
-    # For hgg axis titles:
-    gStyle.SetTitleColor(1, "XYZ")
-    gStyle.SetTitleFont(42, "XYZ")
-    gStyle.SetTitleSize(0.05, "XYZ")
-    gStyle.SetTitleXOffset(0.95)#//0.9)
-    gStyle.SetTitleYOffset(1.65)# // => 1.15 if exponents
-    
-    # For hgg axis labels:
-    gStyle.SetLabelColor(1, "XYZ")
-    gStyle.SetLabelFont(42, "XYZ")
-    gStyle.SetLabelOffset(0.007, "XYZ")
-    gStyle.SetLabelSize(0.04, "XYZ")
-    
-    # Legends
-    gStyle.SetLegendBorderSize(0)
-    gStyle.SetLegendFillColor(kWhite)
-    gStyle.SetLegendFont(42)
-    
-    #gStyle.SetFillColor(10)
-    # Nothing for now
-    #gStyle.SetTextFont(42)
-    #gStyle.SetTextSize(0.03)
-
-    
-            
+        
 def DrawOnCanv(canv, var_name, plt_cfg, stacks, histos, scaled_sig, ratio_plot, legend, lumi_label, cms_label, total_unc, bdtCut, mA, logY):
 
     canv.SetBottomMargin(0.012)
@@ -489,9 +440,12 @@ def DrawOnCanv(canv, var_name, plt_cfg, stacks, histos, scaled_sig, ratio_plot, 
 
 
     # CMS style
-    CMS_lumi.cmsText = "CMS"
-    CMS_lumi.extraText = "Preliminary"
-    CMS_lumi.extraText_posX = 0.07
+    #CMS_lumi.cmsText = "CMS"
+    #CMS_lumi.extraText = "Preliminary"
+    #CMS_lumi.extraText = "Supplementary"
+    CMS_lumi.cmsText = ""
+    CMS_lumi.extraText = ""
+    #CMS_lumi.extraText_posX = 0.07
     #CMS_lumi.extraText = "Private"
     CMS_lumi.cmsTextSize = 0.95
     CMS_lumi.CMSText_posX = 0.0
@@ -510,10 +464,9 @@ def DrawOnCanv(canv, var_name, plt_cfg, stacks, histos, scaled_sig, ratio_plot, 
     lower_pad.cd()
 
     if var_name.split("_")[-1] in plt_cfg.ana_cfg.sig_names:
-        ratio_plot.GetXaxis().SetTitle('BDT Output')
+        ratio_plot.GetXaxis().SetTitle('BDT output')
     else:
         ratio_plot.GetXaxis().SetTitle(plt_cfg.var_title_map[var_name])
-        ratio_plot.GetXaxis().SetTitleSize(0.1)
     ratio_plot.Draw("APZ SAME")
 
     Draw_unc(total_unc[1], kGray+10)
@@ -525,7 +478,8 @@ def DrawOnCanv(canv, var_name, plt_cfg, stacks, histos, scaled_sig, ratio_plot, 
 
 def SaveCanvPic(canv, save_dir, save_name):
     canv.cd()
-    #canv.SaveAs(save_dir + '/' + save_name + '.pdf')
+    canv.SaveAs(save_dir + '/' + save_name + '.pdf')
     canv.SaveAs(save_dir + '/' + save_name + '.png')
+    canv.SaveAs(save_dir + '/' + save_name + '.eps')
 
     canv.Close()

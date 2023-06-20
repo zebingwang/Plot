@@ -202,8 +202,10 @@ def main():
             legend.Draw('SAME')
 
             # CMS style
-            CMS_lumi.cmsText = "CMS"
-            CMS_lumi.extraText = "Simulation Preliminary"
+            #CMS_lumi.cmsText = "CMS"
+            #CMS_lumi.extraText = "Simulation Preliminary"
+            CMS_lumi.cmsText = ""
+            CMS_lumi.extraText = ""
             CMS_lumi.cmsTextSize = 0.67
             CMS_lumi.lumiTextSize = 0.6
             CMS_lumi.lumiText_posY = 0.0075
@@ -214,6 +216,7 @@ def main():
             CMS_lumi.CMS_lumi(canvas,5,0,'run2')
 
             canvas.SaveAs('./interpolation/cuteff_'+year+'.png')
+            canvas.SaveAs('./interpolation/cuteff_'+year+'.pdf')
             canvas.Close()
         
 
