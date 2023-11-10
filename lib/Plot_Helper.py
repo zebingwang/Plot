@@ -228,16 +228,16 @@ def Get_SysUnc(hist, hist_up, hist_dn):
 
     return YSys_ErrH, YSys_ErrL, YSysNorm_ErrH, YSysNorm_ErrL
 
-def Total_Unc(hist_norm, hist_sys, sys_names, analyzer_cfg):
+def Total_Unc(hist_norm, hist_sys, analyzer_cfg):
     TH1.Sumw2
     hist_norm = hist_norm.GetStack().Last()
 
     stacks_sys = {}
-    for sys in sys_names:
+    for sys in analyzer_cfg.sys_names:
         stacks_sys['bkgSys_'+sys]  = THStack("h_stack_bkgSys_"+sys, "bkgSys_"+sys)
 
     
-    for sys in sys_names:
+    for sys in analyzer_cfg.sys_names:
         for sample in analyzer_cfg.bkg_names:
             stacks_sys['bkgSys_'+sys].Add(hist_sys[sample][sys])
 
@@ -247,9 +247,9 @@ def Total_Unc(hist_norm, hist_sys, sys_names, analyzer_cfg):
     YSys_ErrL = {}
     YSysNorm_ErrH = {}
     YSysNorm_ErrL = {}
-    for i in range(len(sys_names)/2):
-        #print stacks_sys['bkgSys_'+sys_names[2*i]].GetStack().Last()
-        YSys_ErrH[i], YSys_ErrL[i], YSysNorm_ErrH[i], YSysNorm_ErrL[i] = Get_SysUnc(hist_norm, stacks_sys['bkgSys_'+sys_names[2*i]].GetStack().Last(), stacks_sys['bkgSys_'+sys_names[2*i+1]].GetStack().Last())
+    for i in range(len(analyzer_cfg.sys_names)/2):
+        #print stacks_sys['bkgSys_'+analyzer_cfg.sys_names[2*i]].GetStack().Last()
+        YSys_ErrH[i], YSys_ErrL[i], YSysNorm_ErrH[i], YSysNorm_ErrL[i] = Get_SysUnc(hist_norm, stacks_sys['bkgSys_'+analyzer_cfg.sys_names[2*i]].GetStack().Last(), stacks_sys['bkgSys_'+analyzer_cfg.sys_names[2*i+1]].GetStack().Last())
 
 
     BinTotal = hist_norm.GetNbinsX()
@@ -281,7 +281,7 @@ def Total_Unc(hist_norm, hist_sys, sys_names, analyzer_cfg):
         
         NErrH = 0.0
         NErrL = 0.0
-        for i in range(len(sys_names)/2):
+        for i in range(len(analyzer_cfg.sys_names)/2):
             NErrH = NErrH + YSys_ErrH[i][iBin-1] * YSys_ErrH[i][iBin-1] 
             NErrL = NErrL + YSys_ErrL[i][iBin-1] * YSys_ErrL[i][iBin-1]
 

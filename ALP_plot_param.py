@@ -25,8 +25,7 @@ import random
 import argparse
 parser = argparse.ArgumentParser(description="A simple ttree plotter")
 parser.add_argument("-y", "--Year", dest="year", default="run2", help="which year's datasetes")
-parser.add_argument('-C', '--CR', dest='CR', action='store_true', default=False, help='make control region')
-parser.add_argument('-S', '--SR', dest='SR', action='store_true', default=False, help='make signal region')
+parser.add_argument("--region", dest="region", type=int, default=0, help="0 for full region, 1 for signal region, 2 for sideband region")
 parser.add_argument('-m', '--mva', dest='mva', action='store_true', default=False, help='use mva or not')
 parser.add_argument('--cut', dest='cut', action='store_true', default=False, help='apply mva')
 parser.add_argument("--cutVal", dest="cutVal", type=float, default=0.0, help="mva cut value")
@@ -37,97 +36,34 @@ parser.add_argument('--ele', dest='ele', action='store_true', default=False, hel
 parser.add_argument('--mu', dest='mu', action='store_true', default=False, help='muon channel?')
 args = parser.parse_args()
 
-version = 'UL'
-
 
 
 gROOT.SetBatch(True)
 tdrstyle.setTDRStyle()
 
-mva = args.mva
-if args.CR:
-    name = version + '_CR'
-elif args.SR:
-    name = version + '_SR'
-elif mva:
-    name = version + '_mva'
-else:
-    name = version
 
-#if args.cut: name = name + '_cut_' + str(args.cutVal) + '_' + args.mA
-if args.cut: name = name + '_cut_' + args.mA
-
-if args.ele:
-    name = name + '_ele'
-if args.mu:
-    name = name + '_mu'
-
-
-
-if args.year == '2016':
-    file_out = 'plots_16UL'
-    out_name = "ALP_plot_data16_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2016.pkl"
-    #mvaCut = 0.8675
-elif args.year == '-2016':
-    file_out = 'plots_16APVUL'
-    out_name = "ALP_plot_data16APV_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2016.pkl"
-    #mvaCut = 0.8365
-elif args.year == '2017':
-    file_out = 'plots_17UL'
-    out_name = "ALP_plot_data17_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2017.pkl"
-    #mvaCut = 0.8365
-elif args.year == '2018':
-    file_out = 'plots_18UL'
-    out_name = "ALP_plot_data18_"+name+".root"
-    BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_2018.pkl"
-    #mvaCut = 0.9766
-elif args.year == 'run2':
-    file_out = 'plots_run2UL'
-    out_name = "ALP_plot_run2_"+name+".root"
-    
-    if args.ele:
-        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param_ele.pkl"
-        mvaCut = {'M1':0.965, 'M2':0.98, 'M3':0.98, 'M4':0.975, 'M5':0.975, 'M6':0.955, 'M7':0.97, 'M8':0.975, 'M9':0.98, 'M10':0.98, 'M15':0.98, 'M20':0.985, 'M25':0.985, 'M30':0.98}
-    elif args.mu:
-        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param_mu.pkl"
-        mvaCut = {'M1':0.95, 'M2':0.975, 'M3':0.97, 'M4':0.98, 'M5':0.985, 'M6':0.985, 'M7':0.985, 'M8':0.985, 'M9':0.985, 'M10':0.99, 'M15':0.99, 'M20':0.99, 'M25':0.985, 'M30':0.98}
-    else:
-        #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param_onlyM10.pkl"
-        BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/UL/model_ALP_BDT_param.pkl"
-        #BDT_filename="/publicfs/cms/user/wangzebing/ALP/Analysis_code/MVA/weight/nodR/model_ALP_BDT_param_runII.pkl"# v5
-        mvaCut = {'M1':0.955, 'M2':0.98, 'M3':0.985, 'M4':0.98, 'M5':0.985, 'M6':0.99, 'M7':0.985, 'M8':0.99, 'M9':0.99, 'M10':0.99, 'M15':0.99, 'M20':0.99, 'M25':0.985, 'M30':0.98}
-else:
-    print "do not include at 2016/2017/2018"
-    exit(0)
-
-file_plot = file_out + "/plot_"+name
 # load the model from disk
-model = pickle.load(open(BDT_filename, 'rb'))
+#model = pickle.load(open(BDT_filename, 'rb'))
 
 def main():
 
-    if not os.path.exists(file_out):
-        os.makedirs(file_out)
+    analyzer_cfg = AC.Analyzer_Config('inclusive', args.year, args.region, args.mva)
 
-    if not os.path.exists(file_plot):
-        os.makedirs(file_plot)
+    if not os.path.exists(analyzer_cfg.out_dir):
+        os.makedirs(analyzer_cfg.out_dir)
 
-    out_file = TFile( file_out + '/' + out_name , "RECREATE")
+    if not os.path.exists(analyzer_cfg.plot_output_path):
+        os.makedirs(analyzer_cfg.plot_output_path)
 
-    analyzer_cfg = AC.Analyzer_Config('inclusive',args.year)
+    out_file = TFile( analyzer_cfg.out_dir + '/' + analyzer_cfg.root_output_name , "RECREATE")
+    model = pickle.load(open(analyzer_cfg.BDT_filename, 'rb'))
+
+    
 
     if args.cut: 
         analyzer_cfg.sig_names = [args.mA]
         analyzer_cfg.samp_names = analyzer_cfg.bkg_names + analyzer_cfg.sig_names + ['data']
 
-    ############ CR plots#########
-    #if args.CR:
-        #analyzer_cfg.sample_loc = analyzer_cfg.sample_loc.replace('massInde','massInde/CR')
-        #analyzer_cfg.sig_names  = ['']
-    ##############################
 
     analyzer_cfg.Print_Config()
     ntuples = LoadNtuples(analyzer_cfg)
@@ -135,7 +71,7 @@ def main():
     var_names = plot_cfg.var_title_map.keys()
 
 
-    if mva:
+    if args.mva:
         var_mva = []
         for ALP_mass in analyzer_cfg.sig_names:
             var_names.append('mvaVal_'+ALP_mass)
@@ -146,15 +82,10 @@ def main():
     # get mass region
     sigma_low, sigma_hig = getMassSigma(analyzer_cfg)
 
-    #### systematic uncertainties ######
-    sys_names = ['CMS_eff_g_up','CMS_eff_g_dn','CMS_pileup_up','CMS_pileup_dn','CMS_eff_lep_up','CMS_eff_lep_dn']
-
     ### declare histograms
 
     histos = {}
     histos_sys = {}
-
-    #histos['mvaVal_bkg']    = TH2F('mvaVal_bkg', 'mvaVal_bkg', 35,  0., 35., 100, 0., 1)#2D
 
     for var_name in var_names:
         histos[var_name] = {}
@@ -195,7 +126,7 @@ def main():
         histos['ALP_calculatedPhotonIso'][sample] = TH1F('ALP_calculatedPhotonIso' + '_' + sample, 'ALP_calculatedPhotonIso' + '_' + sample, 50, 0., 5.)
         histos['param'][sample] = TH1F('param' + '_' + sample, 'param' + '_' + sample, 25, -0.3, 0.6)
 
-        if mva:
+        if args.mva:
             for ALP_mass in analyzer_cfg.sig_names:
                 #mva_bin = np.hstack((np.arange(0.0, 0.95, 0.02),np.arange(0.95,1.0,0.005)))
                 #histos['mvaVal_'+ALP_mass][sample]    = TH1F('mvaVal_'+ALP_mass    + '_' + sample, 'mvaVal_'+ALP_mass    + '_' + sample, mva_bin.shape[0]-1,  mva_bin)
@@ -214,7 +145,7 @@ def main():
         histos_sys[var_name] = {}
         for sample in analyzer_cfg.samp_names:
             histos_sys[var_name][sample] = {}
-            for sys in sys_names:
+            for sys in analyzer_cfg.sys_names:
                 histos_sys[var_name][sample][sys] = copy.deepcopy(histos[var_name][sample])
                 histos_sys[var_name][sample][sys].SetNameTitle(var_name+'_'+sample+'_'+sys, var_name+'_'+sample+'_'+sys)
 
@@ -227,7 +158,7 @@ def main():
 
         for iEvt in range( ntup.GetEntries() ):
             ntup.GetEvent(iEvt)
-            #if (iEvt == 100): break
+            if (iEvt == 100): break
 
 
             if (iEvt % 100000 == 1):
@@ -257,17 +188,15 @@ def main():
                 #if (ntup.pho1PIso_noCorr > (0.317 + 0.01512*ntup.pho1Pt + 0.00002259*ntup.pho1Pt*ntup.pho1Pt)) or (ntup.pho1PIso_noCorr > (0.317 + 0.01512*ntup.pho2Pt + 0.00002259*ntup.pho2Pt*ntup.pho2Pt)): continue
                 if ntup.H_m>180. or ntup.H_m<110.: continue
 
-                if  args.CR:
-                    if ntup.H_m<135. and ntup.H_m>115.: continue
-                if  args.SR:
-                    if ntup.H_m>135. or ntup.H_m<115.: continue
+                if  args.region == 1 and (ntup.H_m>135. or ntup.H_m<115.): continue
+                if  args.region == 2 and (ntup.H_m<135. and ntup.H_m>115.): continue
 
 
                 #if abs(ntup.l1_id)!=13: continue
 
                 #print 'pho1: pt:' + str(ntup.pho1Pt) + ', eta: ' + str(ntup.pho1eta) + ', SFs: ' + str(pho1_SFs)
                 MVA_value = {}
-                if mva:
+                if args.mva:
                     
                     for ALP_mass in analyzer_cfg.sig_names:
 
@@ -283,7 +212,7 @@ def main():
 
 
                     if args.cut:
-                        if MVA_value[args.mA] < mvaCut[args.mA]: continue
+                        if MVA_value[args.mA] < analyzer_cfg.mvaCut[args.mA]: continue
                         #if MVA_value[args.mA] < args.cutVal: continue
 
                     for ALP_mass in analyzer_cfg.sig_names:
@@ -304,7 +233,7 @@ def main():
                             #histos['mvaVal_bkg'].Fill(mass_list[ALP_mass], MVA_value[ALP_mass], weight)
                 
                 var_map = {'Z_m':ntup.Z_m, 'H_m':ntup.H_m, 'ALP_m':ntup.ALP_m,'pho1Pt':ntup.pho1Pt, 'pho1eta':ntup.pho1eta, 'pho1phi':ntup.pho1phi, 'pho1R9':ntup.pho1R9, 'pho1IetaIeta':ntup.pho1IetaIeta, 'pho1IetaIeta55':ntup.pho1IetaIeta55,'pho1PIso_noCorr':ntup.pho1PIso_noCorr, 'pho1CIso':ntup.pho1CIso, 'pho1NIso':ntup.pho1NIso, 'pho1HOE':ntup.pho1HOE, 'pho2Pt':ntup.pho2Pt, 'pho2eta':ntup.pho2eta, 'pho2phi':ntup.pho2phi, 'pho2R9':ntup.pho2R9, 'pho2IetaIeta':ntup.pho2IetaIeta, 'pho2IetaIeta55':ntup.pho2IetaIeta55,'pho2PIso_noCorr':ntup.pho2PIso_noCorr, 'pho2CIso':ntup.pho2CIso, 'pho2NIso':ntup.pho2NIso, 'pho2HOE':ntup.pho2HOE,'ALP_calculatedPhotonIso':ntup.ALP_calculatedPhotonIso, 'var_dR_Za':ntup.var_dR_Za, 'var_dR_g1g2':ntup.var_dR_g1g2, 'var_dR_g1Z':ntup.var_dR_g1Z, 'var_PtaOverMh':ntup.var_PtaOverMh, 'var_Pta':ntup.var_Pta, 'var_MhMZ':ntup.var_MhMZ, 'H_pt':ntup.H_pt, 'var_PtaOverMa':ntup.var_PtaOverMa, 'var_MhMa':ntup.var_MhMa}
-                if mva:
+                if args.mva:
                     var_map_mva = {}
                     for ALP_mass in analyzer_cfg.sig_names:
                         var_map_mva['mvaVal_'+ALP_mass] = MVA_value[ALP_mass]
@@ -366,7 +295,7 @@ def main():
                 histos['param'][sample].Fill( param_val['param'], weight )
                     
 
-                for sys_name in sys_names:
+                for sys_name in analyzer_cfg.sys_names:
 
                     if sys_name =='CMS_eff_g_up':
                         #weight = ntup.factor * (ntup.pho1SFs+ntup.pho1SFs_sys) * (ntup.pho2SFs+ntup.pho2SFs_sys)
@@ -406,7 +335,7 @@ def main():
     sys_dir.cd()
     for var_name in var_names:
         for sample in analyzer_cfg.samp_names:
-            for sys in sys_names:
+            for sys in analyzer_cfg.sys_names:
                 plot_cfg.SetHistStyles(histos_sys[var_name][sample][sys], sample)
                 histos_sys[var_name][sample][sys].Write()
 
@@ -426,20 +355,20 @@ def main():
         legend = MakeLegend(plot_cfg, histos[var_name], scaled_sig)
 
         #### uncertainty graph
-        total_unc = Total_Unc(stacks['bkg'], histos_sys[var_name], sys_names, analyzer_cfg)
+        total_unc = Total_Unc(stacks['bkg'], histos_sys[var_name], analyzer_cfg)
 
         if args.ln:
             canv_log = CreateCanvas(var_name+'_log')
             DrawOnCanv(canv_log, var_name, plot_cfg, stacks, histos[var_name], scaled_sig, ratio_plot, legend, lumi_label, cms_label, total_unc, args.cut, args.mA, logY=True)
 
             canv_log.Write()
-            SaveCanvPic(canv_log, file_plot, var_name+'_log')
+            SaveCanvPic(canv_log, analyzer_cfg.plot_output_path, var_name+'_log')
         else:
             canv = CreateCanvas(var_name)
             DrawOnCanv(canv, var_name, plot_cfg, stacks, histos[var_name], scaled_sig, ratio_plot, legend, lumi_label, cms_label, total_unc, args.cut, args.mA, logY=False)
 
             canv.Write()
-            SaveCanvPic(canv, file_plot, var_name)
+            SaveCanvPic(canv, analyzer_cfg.plot_output_path, var_name)
 
 
     

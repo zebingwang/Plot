@@ -114,7 +114,8 @@ def main():
     years = ['16', '16APV', '17', '18']
     sys_names = ['CMS_eff_g_up','CMS_eff_g_dn','CMS_pileup_up','CMS_pileup_dn','CMS_eff_lep_up','CMS_eff_lep_dn']
     
-    path_basic_num = '/publicfs/cms/user/wangzebing/ALP/Analysis_code/fit/fit_run2_UL_eff/'
+    #path_basic_num = '/publicfs/cms/user/wangzebing/ALP/Analysis_code/fit/fit_run2_UL_eff/'
+    path_basic_num = '/publicfs/cms/user/wangzebing/ALP/Analysis_code/fit/fit_run2_UL_eff_beforBDT/'
     path_basic_dem = '/publicfs/cms/user/wangzebing/ALP/Analysis_out/UL/'
     eff = {}
     eff_sys = {}
@@ -123,7 +124,7 @@ def main():
     eff_sys_total_up = {}
     eff_sys_total_dn = {}
 
-
+    print "start"
     for year in years:
         eff[year] = {}
         eff_sys[year] = {}
@@ -226,14 +227,14 @@ def main():
             gr[year].SetMarkerStyle( marks[years.index(year)] )
             #gr[year].SetMarkerSize(2)
             gr[year].SetTitle('')
-            gr[year].GetHistogram().SetMaximum(3.0)
+            gr[year].GetHistogram().SetMaximum(4.0)
             gr[year].GetHistogram().SetMinimum(0.2)
             gr[year].GetXaxis().SetTitle( 'm_{a} (GeV)' )
             #gr[year].GetXaxis().SetLabelSize(0.045)
             #gr[year].GetXaxis().SetTitleSize(0.045)
             gr[year].GetYaxis().SetTitle( 'Efficiency #times Acceptance (%)' )
 
-            legend.AddEntry(gr[year],"20"+year,"lp")
+            legend.AddEntry(gr[year],"20"+year,"ep")
             
             gr[year].SetFillColor(colors[years.index(year)])
             gr[year].SetFillStyle(3001)
@@ -245,16 +246,17 @@ def main():
         gr['18'].Draw("LP")
 
         # CMS style
-        #CMS_lumi.cmsText = "CMS"
-        #CMS_lumi.extraText = "Simulation Preliminary"
-        CMS_lumi.cmsText = ""
-        CMS_lumi.extraText = ""
+        CMS_lumi.cmsText = "CMS"
+        CMS_lumi.extraText = "Simulation Supplementary"
+        #CMS_lumi.extraText = "Simulation"
+        #CMS_lumi.cmsText = ""
+        #CMS_lumi.extraText = ""
         CMS_lumi.cmsTextSize = 0.67
         CMS_lumi.lumiTextSize = 0.6
         CMS_lumi.lumiText_posY = 0.0075
         CMS_lumi.lumiText_posX = 0.0
         CMS_lumi.CMSText_posX = -0.03
-        CMS_lumi.extraText_posX = 0.08
+        CMS_lumi.extraText_posX = 0.11
         CMS_lumi.outOfFrame = True
         CMS_lumi.CMS_lumi(canvas,5,0,'run2')
 
@@ -271,9 +273,12 @@ def main():
 
         legend.Draw('SAME')
 
-        canvas.SaveAs('./interpolation/eff_'+channel+'.png')
-        canvas.SaveAs('./interpolation/eff_'+channel+'.pdf')
+        canvas.SaveAs('./interpolation/eff_'+channel+'_beforeBDT.png')
+        canvas.SaveAs('./interpolation/eff_'+channel+'_beforeBDT.pdf')
         canvas.Close()
+
+        for m in range(len(mass_list)):
+            print "{}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}\t{:.3f}".format(mass_list[m],eff_16_mean[m],eff_sys_total_dn['16'][channel][m],eff['17'][channel][m],eff_sys_total_dn['17'][channel][m],eff['18'][channel][m],eff_sys_total_dn['18'][channel][m])
         
       
     

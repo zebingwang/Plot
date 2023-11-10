@@ -192,7 +192,7 @@ def main():
                 #gr[year].GetXaxis().SetTitleSize(0.045)
                 gr[cut].GetYaxis().SetTitle( 'Selection efficiency' )
 
-                legend.AddEntry(gr[cut],cuts_lable[cuts.index(cut)],"lp")
+                legend.AddEntry(gr[cut],cuts_lable[cuts.index(cut)],"ep")
 
                 if cuts.index(cut) == 0:
                     gr[cut].Draw("ALP")

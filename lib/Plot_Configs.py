@@ -8,6 +8,7 @@ class Plot_Config:
     def __init__(self, ana_cfg, year):
         self.ana_cfg = ana_cfg
         self.colors  = {}
+        self.var_title_map  = {}
         self.logY    = False
         self.year    = year
         if year == '2016':
@@ -30,42 +31,9 @@ class Plot_Config:
 
         self.LoadColors()
 
-        self.var_title_map = {
-        'Z_m':r"m_{\ell\ell}",
-        'H_m':r"m_{\ell\ell\gamma\gamma}", 
-        'ALP_m':r"m_{\gamma\gamma}",
-        'pho1Pt':r"p_{T,\gamma 1}",
-        'pho1eta':r"\eta_{\gamma 1}",
-        'pho1phi':r"\phi_{\gamma 1}", 
-        'pho1R9':r"R_{9,\gamma 1}", 
-        'pho1IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 1}", 
-        'pho1IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 1}",
-        'pho1PIso_noCorr':r"I_{\gamma,\gamma 1}", 
-        'pho1CIso':r"I_{ch,\gamma 1}", 
-        'pho1NIso':r"I_{n,\gamma 1}", 
-        'pho1HOE':r"\gamma 1\ H/E",
-        'pho2Pt':r"p_{T,\gamma 2}", 
-        'pho2eta':r"\eta_{\gamma 2}", 
-        'pho2phi':r"\phi_{\gamma_2}", 
-        'pho2R9':r"R_{9,\gamma 2}", 
-        'pho2IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 2}",
-        'pho2IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 2}",
-        'pho2PIso_noCorr':r"I_{\gamma,\gamma 2}", 
-        'pho2CIso':r"I_{ch,\gamma 2}", 
-        'pho2NIso':r"I_{n,\gamma 2}", 
-        'pho2HOE':r"\gamma 2\ H/E",
-        'ALP_calculatedPhotonIso':r"I_{\gamma,ALPs}", 
-        'var_dR_Za':r"\Delta R(Z,a)", 
-        'var_dR_g1g2':r"\Delta R(\gamma 1,\gamma 2)", 
-        'var_dR_g1Z':r"\Delta R(\gamma 1,Z)", 
-        'var_PtaOverMh':r"p_{T,a}/m_{\ell\ell\gamma\gamma}", 
-        'var_Pta':r"p_{T,a}", 
-        'var_MhMZ':r"m_{\ell\ell\gamma\gamma}+m_{\ell\ell}", 
-        'H_pt':r"p_{T,H}", 
-        'var_PtaOverMa':r"p_{T,a}/m_{\gamma\gamma}", 
-        'var_MhMa':r"m_{\ell\ell\gamma\gamma}+m_{\gamma\gamma}", 
-        'param':r'(m_a-m_{a,hyp})/m_{\ell\ell\gamma\gamma}'
-        }
+        self.LoadVariableNames()
+
+
 
     def LoadColors(self):
         self.colors["Data"] = kBlack
@@ -85,6 +53,45 @@ class Plot_Config:
         self.colors["M30"] = kSpring -7
 
         self.colors["DYJetsToLL"]  =  kAzure + 7
+
+    def LoadVariableNames(self):
+        self.var_title_map = {
+            'Z_m':r"m_{\ell\ell}",
+            'H_m':r"m_{\ell\ell\gamma\gamma}", 
+            'ALP_m':r"m_{\gamma\gamma}",
+            'pho1Pt':r"p_{T,\gamma 1}",
+            'pho1eta':r"\eta_{\gamma 1}",
+            'pho1phi':r"\phi_{\gamma 1}", 
+            'pho1R9':r"R_{9,\gamma 1}", 
+            'pho1IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 1}", 
+            'pho1IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 1}",
+            'pho1PIso_noCorr':r"I_{\gamma,\gamma 1}", 
+            'pho1CIso':r"I_{ch,\gamma 1}", 
+            'pho1NIso':r"I_{n,\gamma 1}", 
+            'pho1HOE':r"\gamma 1\ H/E",
+            'pho2Pt':r"p_{T,\gamma 2}", 
+            'pho2eta':r"\eta_{\gamma 2}", 
+            'pho2phi':r"\phi_{\gamma_2}", 
+            'pho2R9':r"R_{9,\gamma 2}", 
+            'pho2IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 2}",
+            'pho2IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 2}",
+            'pho2PIso_noCorr':r"I_{\gamma,\gamma 2}", 
+            'pho2CIso':r"I_{ch,\gamma 2}", 
+            'pho2NIso':r"I_{n,\gamma 2}", 
+            'pho2HOE':r"\gamma 2\ H/E",
+            'ALP_calculatedPhotonIso':r"I_{\gamma,ALPs}", 
+            'var_dR_Za':r"\Delta R(Z,a)", 
+            'var_dR_g1g2':r"\Delta R(\gamma 1,\gamma 2)", 
+            'var_dR_g1Z':r"\Delta R(\gamma 1,Z)", 
+            'var_PtaOverMh':r"p_{T,a}/m_{\ell\ell\gamma\gamma}", 
+            'var_Pta':r"p_{T,a}", 
+            'var_MhMZ':r"m_{\ell\ell\gamma\gamma}+m_{\ell\ell}", 
+            'H_pt':r"p_{T,H}", 
+            'var_PtaOverMa':r"p_{T,a}/m_{\gamma\gamma}", 
+            'var_MhMa':r"m_{\ell\ell\gamma\gamma}+m_{\gamma\gamma}", 
+            'param':r'(m_a-m_{a,hyp})/m_{\ell\ell\gamma\gamma}'
+        }
+
 
     def SetHistStyles(self, hist, sample):
         if sample == 'data':

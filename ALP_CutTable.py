@@ -30,7 +30,7 @@ def main():
     #mass = 'massIndependent'
     version = 'UL'
 
-    analyzer_cfg = AC.Analyzer_Config('inclusive', args.year)
+    analyzer_cfg = AC.Analyzer_Config('inclusive', args.year,"","")
     analyzer_cfg.Print_Config()
 
     plot_cfg = PC.Plot_Config(analyzer_cfg, args.year)

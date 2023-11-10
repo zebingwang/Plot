@@ -44,8 +44,8 @@ def getVariableHistsEventsNumber_weight(Tree,varName,sample,cut):
 
 def CountCutFlow(ana_cfg, lumi, outPath, version):
 
-    cutName = ["total Number of events", "HLT", "2 leptons", "isolation", "lep tight", "m_{ll} > 50GeV", "2 photons", "charge Iso", "neutral Iso","HOverE", "\\Delta R(l,\\gamma)>0.4","110 \\leq m_{H} \\leq 180","mva","trigger"]
-    varName=["1", "passChaHadIso", "passNeuHadIso","passHOverE","passdR_gl","(H_m>110&&H_m<180)","passBDT","event_passedTrig"]
+    cutName = ["total Number of events", "HLT", "2 leptons", "isolation", "lep tight", "m_{ll} > 50GeV", "2 photons", "charge Iso", "neutral Iso","HOverE", "\\Delta R(l,\\gamma)>0.4","115 \\leq m_{H} \\leq 135","mva","trigger"]
+    varName=["1", "passChaHadIso", "passNeuHadIso","passHOverE","passdR_gl","(H_m>115&&H_m<135)","passBDT","event_passedTrig"]
 
     outTable = open(outPath + 'cutFlowTable_'+ version + '.txt',"w")
     outTable.write("\\begin{landscape}\n")
