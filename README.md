@@ -6,6 +6,8 @@
 conda env create -f environment.yml -n hzgPlots
 conda deactivate
 conda activate hzgPlots
+
+git clone -b HZGamma_run3 https://github.com/zebingwang/Plot.git
 ```
 
 **2. Prepare Input Datasets**
