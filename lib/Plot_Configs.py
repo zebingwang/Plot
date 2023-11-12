@@ -1,6 +1,5 @@
 import os
 import sys
-import Analyzer_Configs as AC
 from ROOT import *
 
 class Plot_Config:
@@ -8,7 +7,7 @@ class Plot_Config:
     def __init__(self, ana_cfg, year):
         self.ana_cfg = ana_cfg
         self.colors  = {}
-        self.var_title_map  = {}
+        self.variables_map  = {}
         self.logY    = False
         self.year    = year
         if year == '2016':
@@ -24,82 +23,91 @@ class Plot_Config:
         elif year == 'run2':
             self.lumi    = '138'
         else:
-            print 'do not in 2016/2017/2018!'
+            print('do not in 2016/2017/2018!')
             exit(0)
         self.sig_scale  = 5
         self.sig_weight = 0.4133
 
         self.LoadColors()
-
-        self.LoadVariableNames()
+        self.LoadVariables()
+        self.InitializeHistos()
 
 
 
     def LoadColors(self):
         self.colors["Data"] = kBlack
-        self.colors["M1"] = kRed
-        self.colors["M2"] = kYellow
-        self.colors["M3"] = kGreen
-        self.colors["M4"] = kOrange
-        self.colors["M5"] = kPink
-        self.colors["M6"] = kViolet
-        self.colors["M7"] = kSpring
-        self.colors["M8"] = kRed -7
-        self.colors["M9"] = kYellow -7
-        self.colors["M10"] = kGreen -7
-        self.colors["M15"] = kOrange -7
-        self.colors["M20"] = kPink -7
-        self.colors["M25"] = kViolet -7
-        self.colors["M30"] = kSpring -7
+        self.colors["sig"] = kRed
+        self.colors["ggH"] = kRed
+        self.colors["VBFH"] = kRed
+        self.colors["WH"] = kRed
+        self.colors["ZH"] = kRed
+        self.colors["ttH"] = kRed
+        
 
         self.colors["DYJetsToLL"]  =  kAzure + 7
+        self.colors["ZGToLLG"]  =  kOrange
+        self.colors["TT"]  =  kGreen
+        self.colors["ZG2JToG2L2J"]  =  kViolet
+        self.colors["TGJets"]  =  kSpring
+        self.colors["TTGJets"]  =  kYellow
+        self.colors["WW"]  =  kPink
+        self.colors["WZ"]  =  kRed -7
+        self.colors["ZZ"]  =  kYellow -7
+        self.colors["LLAJJ"]  =  kGreen -7
 
-    def LoadVariableNames(self):
-        self.var_title_map = {
-            'Z_m':r"m_{\ell\ell}",
-            'H_m':r"m_{\ell\ell\gamma\gamma}", 
-            'ALP_m':r"m_{\gamma\gamma}",
-            'pho1Pt':r"p_{T,\gamma 1}",
-            'pho1eta':r"\eta_{\gamma 1}",
-            'pho1phi':r"\phi_{\gamma 1}", 
-            'pho1R9':r"R_{9,\gamma 1}", 
-            'pho1IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 1}", 
-            'pho1IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 1}",
-            'pho1PIso_noCorr':r"I_{\gamma,\gamma 1}", 
-            'pho1CIso':r"I_{ch,\gamma 1}", 
-            'pho1NIso':r"I_{n,\gamma 1}", 
-            'pho1HOE':r"\gamma 1\ H/E",
-            'pho2Pt':r"p_{T,\gamma 2}", 
-            'pho2eta':r"\eta_{\gamma 2}", 
-            'pho2phi':r"\phi_{\gamma_2}", 
-            'pho2R9':r"R_{9,\gamma 2}", 
-            'pho2IetaIeta':r"\sigma_{i\eta i\eta 3\times3,\gamma 2}",
-            'pho2IetaIeta55':r"\sigma_{i\eta i\eta,\gamma 2}",
-            'pho2PIso_noCorr':r"I_{\gamma,\gamma 2}", 
-            'pho2CIso':r"I_{ch,\gamma 2}", 
-            'pho2NIso':r"I_{n,\gamma 2}", 
-            'pho2HOE':r"\gamma 2\ H/E",
-            'ALP_calculatedPhotonIso':r"I_{\gamma,ALPs}", 
-            'var_dR_Za':r"\Delta R(Z,a)", 
-            'var_dR_g1g2':r"\Delta R(\gamma 1,\gamma 2)", 
-            'var_dR_g1Z':r"\Delta R(\gamma 1,Z)", 
-            'var_PtaOverMh':r"p_{T,a}/m_{\ell\ell\gamma\gamma}", 
-            'var_Pta':r"p_{T,a}", 
-            'var_MhMZ':r"m_{\ell\ell\gamma\gamma}+m_{\ell\ell}", 
-            'H_pt':r"p_{T,H}", 
-            'var_PtaOverMa':r"p_{T,a}/m_{\gamma\gamma}", 
-            'var_MhMa':r"m_{\ell\ell\gamma\gamma}+m_{\gamma\gamma}", 
-            'param':r'(m_a-m_{a,hyp})/m_{\ell\ell\gamma\gamma}'
+    def LoadVariables(self):
+        self.variables_map = {
+            'Z_pt':                 [r"p_{T, Z}",               50, 0., 50.],
+            'Z_eta':                [r"\eta_{Z}",               50, -2.5, 2.5],
+            'Z_phi':                [r"\phi_{Z}",               50, -4., 4.],
+            'Z_mass':               [r"m_{Z}",                  50, 50., 120.],
+            'H_pt':                 [r"p_{T, \ell\ell\gamma}",  50, 0., 80.],
+            'H_eta':                [r"\eta_{\ell\ell\gamma}",  50, -2.5, 2.5],
+            'H_phi':                [r"\phi_{\ell\ell\gamma}",  50, -4., 4.],
+            'H_mass':               [r"m_{\ell\ell\gamma}",     65, 105., 170.],
+            'gamma_pt':             [r"p_{T,\gamma}",           50, 0., 50.],
+            'gamma_eta':            [r"\eta_{\gamma}",          50, -2.5, 2.5],
+            'gamma_phi':            [r"\phi_{\gamma}",          50, -4., 4.],
+            'Z_lead_lepton_pt':     [r"p_{T,\ell 1}",           50, 0., 50.],
+            'Z_lead_lepton_eta':    [r"\eta_{T,\ell 1}",        50, -2.5, 2.5],
+            'Z_lead_lepton_phi':    [r"\phi_{T,\ell 1}",        50, -4., 4.],
+            'Z_lead_lepton_mass':   [r"m_{\ell 1}",             50, 0., 1.],
+            'Z_sublead_lepton_pt':  [r"p_{T,\ell 2}",           50, 0., 50.],
+            'Z_sublead_lepton_eta': [r"\eta_{T,\ell 2}",        50, -2.5, 2.5],
+            'Z_sublead_lepton_phi': [r"\phi_{T,\ell 2}",        50, -4., 4.],
+            'Z_sublead_lepton_mass':[r"m_{\ell 2}",             50, 0., 1.]
         }
+
+    def InitializeHistos(self):
+        histos = {}
+
+        for var_name in self.variables_map.keys():
+            histos[var_name] = {}
+
+            nbins = self.variables_map[var_name][1]
+            x_min = self.variables_map[var_name][2]
+            x_max = self.variables_map[var_name][3]
+            for sample in self.ana_cfg.samp_names:
+                histos[var_name][sample]    = TH1F( "{}_{}".format(var_name, sample), "{}_{}".format(var_name, sample), nbins, x_min, x_max)
+
+        return histos
 
 
     def SetHistStyles(self, hist, sample):
         if sample == 'data':
             hist.SetMarkerStyle(20)
+            hist.GetXaxis().SetTickLength(0.04)
+            hist.GetXaxis().SetLabelSize(0)
+            hist.GetXaxis().SetTitleOffset(0.95)
+            hist.GetYaxis().SetLabelSize(0.04)
+            hist.GetYaxis().SetTitleSize(0.05)
+            hist.GetYaxis().SetTitleFont(42)
+            hist.GetYaxis().SetTitleOffset(1.15)
         elif sample in self.ana_cfg.sig_names:
             hist.SetLineColor(self.colors[sample])
             hist.SetLineWidth(2)
-            hist.SetFillColor(kGray)
+            hist.SetFillStyle(0)
+            #hist.SetFillColor(kGray)
         elif sample in self.ana_cfg.bkg_names:
             hist.SetFillColor(self.colors[sample])
 

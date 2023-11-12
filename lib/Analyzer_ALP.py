@@ -640,7 +640,7 @@ def plot2D_CONT(canv, hitos2D_sig, hitos2D_bkg):
 def CountYield(ana_cfg, histos, sys_name):
 
     file = open('./BDTSys/BDTSys.txt', 'a')
-    print 'Printing event yield: '
+    print('Printing event yield: ')
 
     '''
     title = '{0:15}\t\t'.format('sample')
@@ -670,7 +670,7 @@ def CountYield(ana_cfg, histos, sys_name):
     else:
         title = 'sample \t\t normal'
         #title = '{0:15}  {1:15}'.format('sample', 'normal')
-    print title
+    print(title)
     file.write(title + '\n')
     for sample in ana_cfg.bkg_names:
         if sys_name in ['ShowerShape', 'pho_scale', 'pho_smear', 'lep_scale', 'lep_smear']:
@@ -679,7 +679,7 @@ def CountYield(ana_cfg, histos, sys_name):
         else:
             line = '%s \t\t %f' %(sample, histos[sample]['norm'].Integral())
             #line = '{0:15}  {1:15d}'.format(sample, histos[sample]['norm'].Integral())
-        print line
+        print(line)
         file.write(line + '\n')
 
 
@@ -690,21 +690,21 @@ def CountNormalizationYield(ana_cfg, histos, sys_names, channel, year):
         file = open('./BDTSys/NormalizationSys_16APV_'+channel+'.txt', 'a')
     else:
         file = open('./BDTSys/NormalizationSys_'+year.lstrip('20')+'_'+channel+'.txt', 'a')
-    print 'Printing event yield: '
+    print('Printing event yield: ')
     file.write('year:'+year+'_'+channel+ '\n')
 
 
     title = '{0:15}\t\t'.format('sample')
     for sys_name in sys_names:
             title = title + '{0:25}\t\t\t'.format(sys_name)
-    print title
+    print(title)
     file.write(title + '\n')
 
     for sample in ana_cfg.sig_names:
         line = '{0:10}\t'.format(sample)
         for sys_name in sys_names:
                 line = line + '{0:15f} (unc:{1:5f})\t\t'.format(histos[sample][sys_name].Integral(),(histos[sample][sys_name].Integral()-histos[sample][sys_names[0]].Integral())/histos[sample][sys_names[0]].Integral())
-        print line
+        print(line)
         file.write(line + '\n')
 
 
@@ -716,7 +716,7 @@ def CountBDTSys(ana_cfg, histos, sys_names, channel, year):
     else:
         file = open('./BDTSys/BDTSys_'+year.lstrip('20')+'_'+channel+'.txt', 'a')
 
-    print 'Printing event yield: '
+    print('Printing event yield: ')
 
     file.write("year:"+ year +'_'+channel + '\n')
 
@@ -726,7 +726,7 @@ def CountBDTSys(ana_cfg, histos, sys_names, channel, year):
             title = title + '{0:25}\t\t\t'.format(sys_name)
         else:
             title = title + '{0:25}\t\t\t{1:25}\t\t\t'.format(sys_name+'_up',sys_name+'_dn')
-    print title
+    print(title)
     file.write(title + '\n')
 
 
@@ -739,5 +739,5 @@ def CountBDTSys(ana_cfg, histos, sys_names, channel, year):
                 line = line + '{0:15f} \t\t'.format(histos[sample][sys_name].Integral())
             else:
                 line = line + '{0:15f} (unc:{1:5f})\t\t{2:15f} (unc:{3:5f})\t\t'.format(histos[sample][sys_name]['up'].Integral(),(histos[sample][sys_name]['up'].Integral()-norm)/norm,histos[sample][sys_name]['dn'].Integral(),(histos[sample][sys_name]['dn'].Integral()-norm)/norm)
-        print line
+        print(line)
         file.write(line + '\n')

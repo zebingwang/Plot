@@ -51,7 +51,7 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
     elif year == 'run2':
         lumi_sqrtS = "138 fb^{-1}"
     else:
-        print "do not include at 2016/2017/2018"
+        print("do not include at 2016/2017/2018")
         exit(0)
     global outOfFrame, relPosX
     if(iPosX/10==0 ): outOfFrame = True
@@ -121,7 +121,7 @@ def CMS_lumi(pad,  iPeriod,  iPosX, year ):
     elif ( iPeriod==5 ):
         lumiText += "13 TeV"
 
-    print lumiText
+    print(lumiText)
 
     latex = rt.TLatex()
     latex.SetNDC()
